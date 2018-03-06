@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fchoquet/cairn/interpreter"
+	"github.com/fchoquet/cairn/cairn/interpreter"
+	"github.com/fchoquet/cairn/cairn/parser"
 )
 
 func main() {
@@ -20,14 +21,10 @@ func main() {
 		}
 
 		i := &interpreter.Interpreter{
-			Parser: &interpreter.Parser{
-				Lexer: &interpreter.Lexer{
-					Text: input,
-				},
-			},
+			Parser: &parser.Parser{},
 		}
 
-		output, err := i.Interpret()
+		output, err := i.Interpret(input)
 		if err != nil {
 			fmt.Println("!!! " + err.Error())
 			continue

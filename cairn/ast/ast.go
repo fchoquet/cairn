@@ -1,23 +1,22 @@
-package interpreter
+package ast
 
-type AST struct {
-}
+import "github.com/fchoquet/cairn/cairn/tokens"
 
 type Node interface {
 }
 
 type UnaryOp struct {
-	Op   *Token
+	Op   *tokens.Token
 	Expr Node
 }
 
 type BinOp struct {
 	Left  Node
-	Op    *Token
+	Op    *tokens.Token
 	Right Node
 }
 
 type Num struct {
-	Token *Token
+	Token *tokens.Token
 	Value string
 }

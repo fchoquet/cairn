@@ -1,18 +1,22 @@
 package interpreter
 
-// see https://ruslanspivak.com/lsbasi-part4/
-
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/fchoquet/cairn/cairn/ast"
+	"github.com/fchoquet/cairn/cairn/parser"
+	"github.com/fchoquet/cairn/cairn/tokens"
 )
 
+// Interpreter traverses the AST returned by the parser and yields results
 type Interpreter struct {
-	Parser *Parser
+	Parser *parser.Parser
 }
 
-func (i *Interpreter) Interpret() (string, error) {
-	ast, err := i.Parser.Parse()
+func (i *Interpreter) Interpret(text string) (string, error) {
+	ast, err := i.Parser.Parse(text)
+
 	if err != nil {
 		return "", err
 	}
@@ -20,28 +24,28 @@ func (i *Interpreter) Interpret() (string, error) {
 	return visit(ast)
 }
 
-func visit(node Node) (string, error) {
+func visit(node ast.Node) (string, error) {
 
-	if num, ok := node.(*Num); ok {
+	if num, ok := node.(*ast.Num); ok {
 		return visitNum(num)
 	}
 
-	if unaryOp, ok := node.(*UnaryOp); ok {
+	if unaryOp, ok := node.(*ast.UnaryOp); ok {
 		return visitUnaryOp(unaryOp)
 	}
 
-	if binOp, ok := node.(*BinOp); ok {
+	if binOp, ok := node.(*ast.BinOp); ok {
 		return visitBinOp(binOp)
 	}
 
 	return "", fmt.Errorf("unexpected node type: %v", node)
 }
 
-func visitNum(node *Num) (string, error) {
+func visitNum(node *ast.Num) (string, error) {
 	return node.Value, nil
 }
 
-func visitUnaryOp(node *UnaryOp) (string, error) {
+func visitUnaryOp(node *ast.UnaryOp) (string, error) {
 	expr, err := visit(node.Expr)
 	if err != nil {
 		return "", err
@@ -53,16 +57,16 @@ func visitUnaryOp(node *UnaryOp) (string, error) {
 	}
 
 	switch node.Op.Type {
-	case PLUS:
+	case tokens.PLUS:
 		return strconv.Itoa(+val), nil
-	case MINUS:
+	case tokens.MINUS:
 		return strconv.Itoa(-val), nil
 	}
 
 	return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
 }
 
-func visitBinOp(node *BinOp) (string, error) {
+func visitBinOp(node *ast.BinOp) (string, error) {
 	left, err := visit(node.Left)
 	if err != nil {
 		return "", err
@@ -84,13 +88,13 @@ func visitBinOp(node *BinOp) (string, error) {
 	}
 
 	switch node.Op.Type {
-	case PLUS:
+	case tokens.PLUS:
 		return strconv.Itoa(leftVal + rightVal), nil
-	case MINUS:
+	case tokens.MINUS:
 		return strconv.Itoa(leftVal - rightVal), nil
-	case MULT:
+	case tokens.MULT:
 		return strconv.Itoa(leftVal * rightVal), nil
-	case DIV:
+	case tokens.DIV:
 		return strconv.Itoa(leftVal / rightVal), nil
 	}
 

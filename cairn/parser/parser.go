@@ -16,6 +16,16 @@ type Parser struct {
 
 // Parse builds an AST from a text
 func (p *Parser) Parse(fileName, text string) (ast.Node, error) {
+	// DEBUG CODE
+	// display all the tokens
+	fmt.Println("--- TOKENS: ---")
+	tk := tokenizer.Tokenize(fileName, text)
+	for token := range tk.Channel {
+		fmt.Println(token)
+	}
+	fmt.Println("---------------")
+	// END DEBUG CODE
+
 	p.Tokenizer = tokenizer.Tokenize(fileName, text)
 
 	// move to the 1st token
@@ -47,7 +57,19 @@ func (p *Parser) eat(tkType tokens.TokenType) error {
 	return p.advance()
 }
 
-// factor : (PLUS|MINUS)factor | INTEGER | LPAREN expr RPAREN
+// expr : arithmexpr | strexpr
+func (p *Parser) expr() (ast.Node, error) {
+	token := p.CurrentToken
+
+	switch token.Type {
+	case tokens.STRING:
+		return p.strexpr()
+	default:
+		return p.arithmexpr()
+	}
+}
+
+// factor : (PLUS|MINUS)factor | INTEGER | LPAREN arithmexpr RPAREN
 func (p *Parser) factor() (ast.Node, error) {
 	token := p.CurrentToken
 
@@ -67,7 +89,7 @@ func (p *Parser) factor() (ast.Node, error) {
 	case tokens.LPAREN:
 		p.eat(tokens.LPAREN)
 
-		node, err := p.expr()
+		node, err := p.arithmexpr()
 		if err != nil {
 			return nil, err
 		}
@@ -103,12 +125,8 @@ func (p *Parser) term() (ast.Node, error) {
 	return node, nil
 }
 
-// Arithmetic expression parser / interpreter.
-//
-// expr   : term ((PLUS | MINUS) term)*
-// term   : factor ((MUL | DIV) factor)*
-// factor : INTEGER | LPAREN expr RPAREN
-func (p *Parser) expr() (ast.Node, error) {
+// arithmexpr : term ((PLUS | MINUS) term)*
+func (p *Parser) arithmexpr() (ast.Node, error) {
 	node, err := p.term()
 	if err != nil {
 		return nil, err
@@ -120,11 +138,42 @@ func (p *Parser) expr() (ast.Node, error) {
 
 		right, err := p.term()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 		node = &ast.BinOp{Left: node, Op: token, Right: right}
 	}
 
 	return node, nil
+}
+
+// strexpr : str (CONCAT str)*
+func (p *Parser) strexpr() (ast.Node, error) {
+	node, err := p.str()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.CurrentToken.Type == tokens.PLUS {
+		token := p.CurrentToken
+		p.eat(tokens.PLUS)
+
+		right, err := p.str()
+		if err != nil {
+			return nil, err
+		}
+		node = &ast.BinOp{Left: node, Op: token, Right: right}
+	}
+	return node, nil
+}
+
+// str : STRING
+func (p *Parser) str() (ast.Node, error) {
+	token := p.CurrentToken
+	err := p.eat(tokens.STRING)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.String{Token: token, Value: token.Value}, nil
 }

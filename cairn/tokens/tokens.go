@@ -16,6 +16,7 @@ const (
 	EOF     TokenType = "EOF"
 	LPAREN  TokenType = "LPAREN"
 	RPAREN  TokenType = "RPAREN"
+	STRING  TokenType = "STRING"
 )
 
 // Token reprensents the result of a lexical analysis

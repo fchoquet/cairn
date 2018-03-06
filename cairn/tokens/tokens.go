@@ -20,26 +20,22 @@ const (
 
 // Token reprensents the result of a lexical analysis
 type Token struct {
-	Type  TokenType
-	Value string
+	Type     TokenType
+	Value    string
+	Position Position
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("Token(%s, %s)", t.Type, t.Value)
+	return fmt.Sprintf("Token(%s, %s, %s)", t.Type, t.Value, t.Position)
 }
 
-// New builds a new Token
-func New(tokenType TokenType, value string) *Token {
-	return &Token{
-		Type:  tokenType,
-		Value: value,
-	}
+// Position represents the position of a token in the source code
+type Position struct {
+	File string
+	Line int
+	Col  int
 }
 
-// Error returns an error Token
-func Error(err error) *Token {
-	return &Token{
-		Type:  ERROR,
-		Value: err.Error(),
-	}
+func (p Position) String() string {
+	return fmt.Sprintf("Pos(%s, %d, %d)", p.File, p.Line, p.Col)
 }

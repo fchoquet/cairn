@@ -14,8 +14,8 @@ type Interpreter struct {
 	Parser *parser.Parser
 }
 
-func (i *Interpreter) Interpret(text string) (string, error) {
-	ast, err := i.Parser.Parse(text)
+func (i *Interpreter) Interpret(fileName, text string) (string, error) {
+	ast, err := i.Parser.Parse(fileName, text)
 
 	if err != nil {
 		return "", err

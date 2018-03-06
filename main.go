@@ -24,7 +24,7 @@ func main() {
 			Parser: &parser.Parser{},
 		}
 
-		output, err := i.Interpret(input)
+		output, err := i.Interpret("stdin", input)
 		if err != nil {
 			fmt.Println("!!! " + err.Error())
 			continue

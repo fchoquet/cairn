@@ -11,14 +11,19 @@ type Tokenizer struct {
 	ch chan *tokens.Token
 }
 
-// Tokenize returns a Tokenizer
-func Tokenize(text string) *Tokenizer {
+// Tokenize returns a Tokenizer ready to return tokens
+func Tokenize(fileName, text string) *Tokenizer {
 	t := &Tokenizer{
 		ch: make(chan *tokens.Token),
 	}
 
 	go func() {
-		t.tokenize(text)
+		t.tokenize(text, tokens.Position{
+			File: fileName,
+			Line: 0,
+			Col:  0,
+		})
+
 		// close the channel to notify completion
 		close(t.ch)
 
@@ -38,17 +43,18 @@ func (t *Tokenizer) NextToken() (*tokens.Token, error) {
 	return tk, nil
 }
 
-func (t *Tokenizer) yieldToken(tkType tokens.TokenType, value string) {
+func (t *Tokenizer) yieldToken(tkType tokens.TokenType, value string, pos tokens.Position) {
 	t.ch <- &tokens.Token{
-		Type:  tkType,
-		Value: value,
+		Type:     tkType,
+		Value:    value,
+		Position: pos,
 	}
 }
 
 // tokenize process a string recursively
-func (t *Tokenizer) tokenize(text string) {
+func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 	if len(text) == 0 {
-		t.yieldToken(tokens.EOF, "")
+		t.yieldToken(tokens.EOF, "", pos)
 		return
 	}
 
@@ -57,31 +63,39 @@ func (t *Tokenizer) tokenize(text string) {
 
 	switch {
 	case isWhiteSpace(head):
+		pos.Col++
 		// simply skip
 	case isDigit(head):
 		value := readInteger(text)
 		tail = text[len(value):]
-		t.yieldToken(tokens.INTEGER, value)
+		t.yieldToken(tokens.INTEGER, value, pos)
+		pos.Col += len(value)
 	case head == '+':
-		t.yieldToken(tokens.PLUS, "+")
+		t.yieldToken(tokens.PLUS, "+", pos)
+		pos.Col++
 	case head == '-':
-		t.yieldToken(tokens.MINUS, "-")
+		t.yieldToken(tokens.MINUS, "-", pos)
+		pos.Col++
 	case head == '*':
-		t.yieldToken(tokens.MULT, "*")
+		t.yieldToken(tokens.MULT, "*", pos)
+		pos.Col++
 	case head == '/':
-		t.yieldToken(tokens.DIV, "/")
+		t.yieldToken(tokens.DIV, "/", pos)
+		pos.Col++
 	case head == '(':
-		t.yieldToken(tokens.LPAREN, "(")
+		t.yieldToken(tokens.LPAREN, "(", pos)
+		pos.Col++
 	case head == ')':
-		t.yieldToken(tokens.RPAREN, ")")
+		t.yieldToken(tokens.RPAREN, ")", pos)
+		pos.Col++
 	default:
-		t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error in %s", text))
+		t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error in %s", text), pos)
 		// stop recursion
 		return
 	}
 
 	// recursively tokenize the rest of the string
-	t.tokenize(tail)
+	t.tokenize(tail, pos)
 }
 
 func readInteger(input string) string {

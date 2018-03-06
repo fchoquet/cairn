@@ -15,8 +15,8 @@ type Parser struct {
 }
 
 // Parse builds an AST from a text
-func (p *Parser) Parse(text string) (ast.Node, error) {
-	p.Tokenizer = tokenizer.Tokenize(text)
+func (p *Parser) Parse(fileName, text string) (ast.Node, error) {
+	p.Tokenizer = tokenizer.Tokenize(fileName, text)
 
 	// move to the 1st token
 	if err := p.advance(); err != nil {
@@ -41,7 +41,7 @@ func (p *Parser) advance() error {
 // it returns an error if the types do not match
 func (p *Parser) eat(tkType tokens.TokenType) error {
 	if p.CurrentToken.Type != tkType {
-		return fmt.Errorf("wrong input type. Expected %s - got %s", tkType, p.CurrentToken.Type)
+		return fmt.Errorf("wrong input type. Expected %s - got %s", tkType, p.CurrentToken)
 	}
 
 	return p.advance()

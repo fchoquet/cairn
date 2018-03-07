@@ -57,16 +57,38 @@ func (p *Parser) eat(tkType tokens.TokenType) error {
 	return p.advance()
 }
 
-// expr : arithmexpr | strexpr
+// expr : assignment | arithmexpr | strexpr
 func (p *Parser) expr() (ast.Node, error) {
 	token := p.CurrentToken
 
 	switch token.Type {
+	case tokens.IDENTIFIER:
+		return p.assignment()
 	case tokens.STRING:
 		return p.strexpr()
 	default:
 		return p.arithmexpr()
 	}
+}
+
+// assignment : IDENTIFIER ASSIGN expr
+func (p *Parser) assignment() (ast.Node, error) {
+	idToken := p.CurrentToken
+	if err := p.eat(tokens.IDENTIFIER); err != nil {
+		return nil, err
+	}
+
+	assignToken := p.CurrentToken
+	if err := p.eat(tokens.ASSIGN); err != nil {
+		return nil, err
+	}
+
+	right, err := p.expr()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.Assignment{Identifier: idToken.Value, Token: assignToken, Right: right}, nil
 }
 
 // factor : (PLUS|MINUS)factor | INTEGER | LPAREN arithmexpr RPAREN
@@ -75,7 +97,9 @@ func (p *Parser) factor() (ast.Node, error) {
 
 	switch token.Type {
 	case tokens.PLUS, tokens.MINUS:
-		p.eat(token.Type)
+		if err := p.eat(token.Type); err != nil {
+			return nil, err
+		}
 
 		node, err := p.factor()
 		if err != nil {
@@ -84,10 +108,14 @@ func (p *Parser) factor() (ast.Node, error) {
 
 		return &ast.UnaryOp{Expr: node, Op: token}, nil
 	case tokens.INTEGER:
-		p.eat(tokens.INTEGER)
+		if err := p.eat(tokens.INTEGER); err != nil {
+			return nil, err
+		}
 		return &ast.Num{Token: token, Value: token.Value}, nil
 	case tokens.LPAREN:
-		p.eat(tokens.LPAREN)
+		if err := p.eat(tokens.LPAREN); err != nil {
+			return nil, err
+		}
 
 		node, err := p.arithmexpr()
 		if err != nil {
@@ -112,7 +140,9 @@ func (p *Parser) term() (ast.Node, error) {
 
 	for p.CurrentToken.Type == tokens.MULT || p.CurrentToken.Type == tokens.DIV {
 		token := p.CurrentToken
-		p.eat(token.Type)
+		if err := p.eat(token.Type); err != nil {
+			return nil, err
+		}
 
 		right, err := p.factor()
 		if err != nil {
@@ -134,7 +164,9 @@ func (p *Parser) arithmexpr() (ast.Node, error) {
 
 	for p.CurrentToken.Type == tokens.PLUS || p.CurrentToken.Type == tokens.MINUS {
 		token := p.CurrentToken
-		p.eat(token.Type)
+		if err := p.eat(token.Type); err != nil {
+			return nil, err
+		}
 
 		right, err := p.term()
 		if err != nil {
@@ -156,7 +188,9 @@ func (p *Parser) strexpr() (ast.Node, error) {
 
 	for p.CurrentToken.Type == tokens.PLUS {
 		token := p.CurrentToken
-		p.eat(tokens.PLUS)
+		if err := p.eat(tokens.PLUS); err != nil {
+			return nil, err
+		}
 
 		right, err := p.str()
 		if err != nil {
@@ -170,8 +204,7 @@ func (p *Parser) strexpr() (ast.Node, error) {
 // str : STRING
 func (p *Parser) str() (ast.Node, error) {
 	token := p.CurrentToken
-	err := p.eat(tokens.STRING)
-	if err != nil {
+	if err := p.eat(tokens.STRING); err != nil {
 		return nil, err
 	}
 

@@ -7,7 +7,13 @@ Experimentations and exploration around programming languages and compilators.
 ## Expression
 
 ```
-expr : arithmexpr | strexpr
+expr : assignment | arithmexpr | strexpr
+```
+
+## Assignment
+
+```
+assignment : IDENTIFIER ASSIGN expr
 ```
 
 ## Arithmetic expressions

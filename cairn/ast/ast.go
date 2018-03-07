@@ -67,3 +67,19 @@ func (str *String) GetToken() *tokens.Token {
 func (str *String) String() string {
 	return fmt.Sprintf("String(%s)", str.Token)
 }
+
+// Assignment represents and assignment in an AST
+type Assignment struct {
+	Token      *tokens.Token
+	Identifier string
+	Right      Node
+}
+
+// GetToken implements the Node interface
+func (asgn *Assignment) GetToken() *tokens.Token {
+	return asgn.Token
+}
+
+func (asgn *Assignment) String() string {
+	return fmt.Sprintf("Assign(%s := %s)", asgn.Identifier, asgn.Right)
+}

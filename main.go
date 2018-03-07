@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+	i := interpreter.New(&parser.Parser{})
+
 	for {
 		fmt.Print("cairn> ")
 
@@ -19,11 +21,6 @@ func main() {
 		if input == "" {
 			continue
 		}
-
-		i := &interpreter.Interpreter{
-			Parser: &parser.Parser{},
-		}
-
 		output, err := i.Interpret("stdin", input)
 		if err != nil {
 			fmt.Println("!!! " + err.Error())

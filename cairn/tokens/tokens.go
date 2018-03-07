@@ -7,16 +7,18 @@ type TokenType string
 
 // Token types
 const (
-	ERROR   TokenType = "ERROR"
-	INTEGER TokenType = "INTEGER"
-	PLUS    TokenType = "PLUS"
-	MINUS   TokenType = "MINUS"
-	MULT    TokenType = "MULT"
-	DIV     TokenType = "DIV"
-	EOF     TokenType = "EOF"
-	LPAREN  TokenType = "LPAREN"
-	RPAREN  TokenType = "RPAREN"
-	STRING  TokenType = "STRING"
+	ERROR      TokenType = "ERROR"
+	INTEGER    TokenType = "INTEGER"
+	PLUS       TokenType = "PLUS"
+	MINUS      TokenType = "MINUS"
+	MULT       TokenType = "MULT"
+	DIV        TokenType = "DIV"
+	EOF        TokenType = "EOF"
+	LPAREN     TokenType = "LPAREN"
+	RPAREN     TokenType = "RPAREN"
+	STRING     TokenType = "STRING"
+	IDENTIFIER TokenType = "IDENTIFIER"
+	ASSIGN     TokenType = "ASSIGN"
 )
 
 // Token reprensents the result of a lexical analysis

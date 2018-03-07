@@ -11,8 +11,24 @@ import (
 
 // Interpreter traverses the AST returned by the parser and yields results
 type Interpreter struct {
-	Parser *parser.Parser
+	Parser      *parser.Parser
+	SymbolTable SymbolTable
 }
+
+// New creates a new interpreter
+func New(parser *parser.Parser) *Interpreter {
+	return &Interpreter{
+		Parser:      parser,
+		SymbolTable: SymbolTable{},
+	}
+}
+
+type Symbol struct {
+	Scope      string
+	Identifier string
+}
+
+type SymbolTable map[Symbol]string
 
 func (i *Interpreter) Interpret(fileName, text string) (string, error) {
 	ast, err := i.Parser.Parse(fileName, text)
@@ -28,36 +44,40 @@ func (i *Interpreter) Interpret(fileName, text string) (string, error) {
 		return "", err
 	}
 
-	return visit(ast)
+	return i.visit(ast)
 }
 
-func visit(node ast.Node) (string, error) {
+func (i *Interpreter) visit(node ast.Node) (string, error) {
 
 	if num, ok := node.(*ast.Num); ok {
-		return visitNum(num)
+		return i.visitNum(num)
 	}
 
 	if unaryOp, ok := node.(*ast.UnaryOp); ok {
-		return visitUnaryOp(unaryOp)
+		return i.visitUnaryOp(unaryOp)
 	}
 
 	if binOp, ok := node.(*ast.BinOp); ok {
-		return visitBinOp(binOp)
+		return i.visitBinOp(binOp)
 	}
 
 	if str, ok := node.(*ast.String); ok {
-		return visitString(str)
+		return i.visitString(str)
+	}
+
+	if str, ok := node.(*ast.Assignment); ok {
+		return i.visitAssignment(str)
 	}
 
 	return "", fmt.Errorf("unexpected node type: %v", node)
 }
 
-func visitNum(node *ast.Num) (string, error) {
+func (i *Interpreter) visitNum(node *ast.Num) (string, error) {
 	return node.Value, nil
 }
 
-func visitUnaryOp(node *ast.UnaryOp) (string, error) {
-	expr, err := visit(node.Expr)
+func (i *Interpreter) visitUnaryOp(node *ast.UnaryOp) (string, error) {
+	expr, err := i.visit(node.Expr)
 	if err != nil {
 		return "", err
 	}
@@ -77,13 +97,13 @@ func visitUnaryOp(node *ast.UnaryOp) (string, error) {
 	return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
 }
 
-func visitBinOp(node *ast.BinOp) (string, error) {
-	left, err := visit(node.Left)
+func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
+	left, err := i.visit(node.Left)
 	if err != nil {
 		return "", err
 	}
 
-	right, err := visit(node.Right)
+	right, err := i.visit(node.Right)
 	if err != nil {
 		return "", err
 	}
@@ -127,6 +147,21 @@ func visitBinOp(node *ast.BinOp) (string, error) {
 	}
 }
 
-func visitString(node *ast.String) (string, error) {
+func (i *Interpreter) visitString(node *ast.String) (string, error) {
 	return node.Value, nil
+}
+
+func (i *Interpreter) visitAssignment(node *ast.Assignment) (string, error) {
+	right, err := i.visit(node.Right)
+	if err != nil {
+		return "", err
+	}
+
+	i.SymbolTable[Symbol{Scope: "global", Identifier: node.Identifier}] = right
+
+	// DEBUG code
+	fmt.Printf("%+v\n", i.SymbolTable)
+	// END DEBUG code
+
+	return right, nil
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/fchoquet/cairn/cairn/tokens"
 )
 
+// Tokenizer transforms a string into a stream of tokens
 type Tokenizer struct {
 	Channel chan *tokens.Token
 }
@@ -33,6 +34,9 @@ func Tokenize(fileName, text string) *Tokenizer {
 	return t
 }
 
+// NextToken yields a new token
+// since the channel is blocking, we only yield a new token when this function is called
+// the tokenize function does not have to worry about memory usage
 func (t *Tokenizer) NextToken() (*tokens.Token, error) {
 	tk := <-t.Channel
 
@@ -70,6 +74,11 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 		tail = text[len(value):]
 		t.yieldToken(tokens.INTEGER, value, pos)
 		pos.Col += len(value)
+	case isIdentifier(head):
+		value := readIdentifier(text)
+		tail = text[len(value):]
+		t.yieldToken(tokens.IDENTIFIER, value, pos)
+		pos.Col += len(value)
 	case head == '+':
 		t.yieldToken(tokens.PLUS, "+", pos)
 		pos.Col++
@@ -100,7 +109,15 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 		tail = text[length:]
 		t.yieldToken(tokens.STRING, value, pos)
 		pos.Col += length
+	case head == ':':
+		// might be an assignment
+		if len(tail) == 0 || tail[0] != '=' {
+			t.yieldToken(tokens.ERROR, "Unexpected :", pos)
+		}
 
+		tail = tail[1:]
+		t.yieldToken(tokens.ASSIGN, ":=", pos)
+		pos.Col += 2
 	default:
 		t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error in %s", text), pos)
 		// stop recursion
@@ -126,75 +143,19 @@ func readInteger(input string) string {
 	return ""
 }
 
-func readString(input string) (string, error) {
+func readIdentifier(input string) string {
 	if input == "" {
-		return "", errors.New("unexpected end of string")
+		return ""
 	}
 
-	if input[0] != '"' {
-		return "", errors.New("expected \" at the beginning of string")
+	head := input[0]
+	tail := input[1:]
+
+	if isIdentifier(head) {
+		return string(head) + readIdentifier(tail)
 	}
 
-	if len(input) < 2 {
-		return "", errors.New("a string litteral must be at least 2 chars long (including surrounding quotes)")
-	}
-
-	return readStringContents(input[1:])
-}
-
-func readStringContents(text string) (string, error) {
-	if len(text) == 0 {
-		return "", errors.New("could not find end of string litteral")
-	}
-
-	// let's skip the initial "
-	head := text[0]
-	tail := text[1:]
-
-	var left string
-
-	switch head {
-	case '"':
-		// end of string reached. stop recursion
-		return "", nil
-	case '\\':
-		var err error
-		left, err = readEscapeSequence(tail)
-		if err != nil {
-			return "", err
-		}
-		tail = tail[len(left):]
-	case '\n':
-		return "", errors.New("could not find end of string litteral")
-	default:
-		left = string(head)
-	}
-
-	// reads the rest of the string recursively
-	right, err := readStringContents(tail)
-	if err != nil {
-		return "", err
-	}
-
-	return (left + right), nil
-}
-
-func readEscapeSequence(text string) (string, error) {
-	// starting an escape sequence
-	if len(text) == 0 {
-		return "", errors.New("invalid escape sequence. did you mean \\\\?")
-	}
-
-	switch text[0] {
-	case '\\':
-		return "\\", nil
-	case '"':
-		return "\"", nil
-	case 'n':
-		return "\n", nil
-	default:
-		return "", errors.New("invalid escape sequence")
-	}
+	return ""
 }
 
 func isWhiteSpace(char byte) bool {
@@ -203,4 +164,8 @@ func isWhiteSpace(char byte) bool {
 
 func isDigit(char byte) bool {
 	return char >= '0' && char <= '9'
+}
+
+func isIdentifier(char byte) bool {
+	return (char >= 'A' && char <= 'z') || char == '_'
 }

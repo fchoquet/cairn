@@ -69,6 +69,10 @@ func (i *Interpreter) visit(node ast.Node) (string, error) {
 		return i.visitAssignment(str)
 	}
 
+	if str, ok := node.(*ast.Variable); ok {
+		return i.visitVariable(str)
+	}
+
 	return "", fmt.Errorf("unexpected node type: %v", node)
 }
 
@@ -157,11 +161,19 @@ func (i *Interpreter) visitAssignment(node *ast.Assignment) (string, error) {
 		return "", err
 	}
 
-	i.SymbolTable[Symbol{Scope: "global", Identifier: node.Identifier}] = right
+	i.SymbolTable[Symbol{Scope: "global", Identifier: node.Variable.Name}] = right
 
 	// DEBUG code
 	fmt.Printf("%+v\n", i.SymbolTable)
 	// END DEBUG code
 
 	return right, nil
+}
+
+func (i *Interpreter) visitVariable(node *ast.Variable) (string, error) {
+	value, ok := i.SymbolTable[Symbol{Scope: "global", Identifier: node.Name}]
+	if !ok {
+		return "", fmt.Errorf("unknown identifier: %s", node.Name)
+	}
+	return value, nil
 }

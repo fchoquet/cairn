@@ -63,6 +63,8 @@ func (p *Parser) expr() (ast.Node, error) {
 
 	switch token.Type {
 	case tokens.IDENTIFIER:
+		// pbm here: a string or an Arithmetic expression can also start with
+		// an identifier. So how to discriminate these situations?
 		return p.assignment()
 	case tokens.STRING:
 		return p.strexpr()
@@ -88,10 +90,17 @@ func (p *Parser) assignment() (ast.Node, error) {
 		return nil, err
 	}
 
-	return &ast.Assignment{Identifier: idToken.Value, Token: assignToken, Right: right}, nil
+	return &ast.Assignment{
+		Variable: ast.Variable{
+			Token: idToken,
+			Name:  idToken.Value,
+		},
+		Token: assignToken,
+		Right: right,
+	}, nil
 }
 
-// factor : (PLUS|MINUS)factor | INTEGER | LPAREN arithmexpr RPAREN
+// factor : (PLUS|MINUS)factor | INTEGER | IDENTIFIER | LPAREN arithmexpr RPAREN
 func (p *Parser) factor() (ast.Node, error) {
 	token := p.CurrentToken
 
@@ -112,6 +121,12 @@ func (p *Parser) factor() (ast.Node, error) {
 			return nil, err
 		}
 		return &ast.Num{Token: token, Value: token.Value}, nil
+	case tokens.IDENTIFIER:
+		if err := p.eat(tokens.IDENTIFIER); err != nil {
+			return nil, err
+		}
+		return &ast.Variable{Token: token, Name: token.Value}, nil
+
 	case tokens.LPAREN:
 		if err := p.eat(tokens.LPAREN); err != nil {
 			return nil, err
@@ -201,12 +216,22 @@ func (p *Parser) strexpr() (ast.Node, error) {
 	return node, nil
 }
 
-// str : STRING
+// str : STRING | IDENTIFIER
 func (p *Parser) str() (ast.Node, error) {
 	token := p.CurrentToken
-	if err := p.eat(tokens.STRING); err != nil {
-		return nil, err
-	}
+	switch token.Type {
+	case tokens.STRING:
+		if err := p.eat(tokens.STRING); err != nil {
+			return nil, err
+		}
 
-	return &ast.String{Token: token, Value: token.Value}, nil
+		return &ast.String{Token: token, Value: token.Value}, nil
+	case tokens.IDENTIFIER:
+		if err := p.eat(tokens.IDENTIFIER); err != nil {
+			return nil, err
+		}
+
+		return &ast.Variable{Token: token, Name: token.Value}, nil
+	}
+	return nil, fmt.Errorf("a string was expected: %s", token)
 }

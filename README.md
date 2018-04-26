@@ -21,12 +21,12 @@ assignment : IDENTIFIER ASSIGN expr
 ```
 arithmexpr : term ((PLUS | MINUS) term)*
 term       : factor ((MUL | DIV) factor)*
-factor     : (PLUS|MINUS)factor | INTEGER | LPAREN arithmexpr RPAREN
+factor     : (PLUS|MINUS)factor | INTEGER | IDENTIFIER | LPAREN arithmexpr RPAREN 
 ```
 
 ## Strings
 
 ```
 strexpr : str (CONCAT str)*
-str     : STRING
+str     : STRING | IDENTIFIER
 ```

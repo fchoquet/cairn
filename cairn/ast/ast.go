@@ -68,11 +68,11 @@ func (str *String) String() string {
 	return fmt.Sprintf("String(%s)", str.Token)
 }
 
-// Assignment represents and assignment in an AST
+// Assignment represent and assignment in an AST
 type Assignment struct {
-	Token      *tokens.Token
-	Identifier string
-	Right      Node
+	Token    *tokens.Token
+	Variable Variable
+	Right    Node
 }
 
 // GetToken implements the Node interface
@@ -81,5 +81,20 @@ func (asgn *Assignment) GetToken() *tokens.Token {
 }
 
 func (asgn *Assignment) String() string {
-	return fmt.Sprintf("Assign(%s := %s)", asgn.Identifier, asgn.Right)
+	return fmt.Sprintf("Assign(%s := %s)", asgn.Variable, asgn.Right)
+}
+
+// Variable represents a variable in an AST
+type Variable struct {
+	Token *tokens.Token
+	Name  string
+}
+
+// GetToken implements the Node interface
+func (v *Variable) GetToken() *tokens.Token {
+	return v.Token
+}
+
+func (v *Variable) String() string {
+	return fmt.Sprintf("Identifier(%s)", v.Name)
 }

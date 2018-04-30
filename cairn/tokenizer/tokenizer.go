@@ -38,7 +38,10 @@ func Tokenize(fileName, text string) *Tokenizer {
 // since the channel is blocking, we only yield a new token when this function is called
 // the tokenize function does not have to worry about memory usage
 func (t *Tokenizer) NextToken() (*tokens.Token, error) {
-	tk := <-t.Channel
+	tk, ok := <-t.Channel
+	if !ok {
+		return nil, errors.New("can not read after end of file")
+	}
 
 	if tk.Type == tokens.ERROR {
 		return nil, errors.New(tk.Value)

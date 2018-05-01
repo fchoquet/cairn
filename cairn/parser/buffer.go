@@ -7,8 +7,6 @@ import (
 	"github.com/fchoquet/cairn/cairn/tokens"
 )
 
-const bufferSize = 2
-
 // TokenBuffer allows implementation of a LL(n) Recusive Descent Parser
 type TokenBuffer interface {
 	// LookAhead returns the nth token (or an error if trying to read after end of file)
@@ -19,24 +17,26 @@ type TokenBuffer interface {
 }
 
 // NewTokenBuffer creates a token buffer
-func NewTokenBuffer(tokenizer *tokenizer.Tokenizer) TokenBuffer {
+func NewTokenBuffer(tokenizer *tokenizer.Tokenizer, size int) TokenBuffer {
 	return &buffer{
-		buffer:    [bufferSize]*tokens.Token{},
+		buffer:    make([]*tokens.Token, size, size),
 		position:  0,
 		tokenizer: tokenizer,
+		size:      size,
 	}
 }
 
 type buffer struct {
-	buffer    [bufferSize]*tokens.Token
+	buffer    []*tokens.Token
 	position  int
 	tokenizer *tokenizer.Tokenizer
+	size      int
 }
 
 // we're using a rotating buffer. this function returns an index
 // based on the current position
 func (b *buffer) indexOf(n int) int {
-	return (b.position + n) % bufferSize
+	return (b.position + n) % b.size
 }
 
 func (b *buffer) load(n int) (*tokens.Token, error) {
@@ -53,7 +53,7 @@ func (b *buffer) load(n int) (*tokens.Token, error) {
 }
 
 func (b *buffer) LookAhead(n int) (*tokens.Token, error) {
-	if n >= bufferSize {
+	if n >= b.size {
 		// We do not return an error. The code has to be fixed so a panic is fine
 		panic(fmt.Sprintf("parser buffer overflow"))
 	}
@@ -67,7 +67,7 @@ func (b *buffer) Consume() (*tokens.Token, TokenBuffer, error) {
 	}
 
 	// create a new buffer with current position empty
-	newBuffer := [bufferSize]*tokens.Token{}
+	newBuffer := make([]*tokens.Token, b.size, b.size)
 	for index, token := range b.buffer {
 		if index != b.position {
 			newBuffer[index] = token
@@ -76,7 +76,8 @@ func (b *buffer) Consume() (*tokens.Token, TokenBuffer, error) {
 
 	return tk, &buffer{
 		buffer:    newBuffer,
-		position:  (b.position + 1) % bufferSize,
+		position:  (b.position + 1) % b.size,
 		tokenizer: b.tokenizer,
+		size:      b.size,
 	}, nil
 }

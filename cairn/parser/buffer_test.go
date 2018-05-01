@@ -14,7 +14,7 @@ func TestBuffer(t *testing.T) {
 		source := `12 + 34 + 56`
 
 		tokenizer := tokenizer.Tokenize("test.ca", source)
-		buffer := NewTokenBuffer(tokenizer)
+		buffer := NewTokenBuffer(tokenizer, 2)
 
 		tk, err := buffer.LookAhead(0)
 		if !assert.Nil(err) || !assert.NotNil(tk) {

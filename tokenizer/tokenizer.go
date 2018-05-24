@@ -95,10 +95,10 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 		t.yieldToken(tokens.DIV, "/", pos)
 		pos.Col++
 	case head == '(':
-		t.yieldToken(tokens.LPAREN, "(", pos)
+		t.yieldToken(tokens.LPAREN, "LPAREN", pos)
 		pos.Col++
 	case head == ')':
-		t.yieldToken(tokens.RPAREN, ")", pos)
+		t.yieldToken(tokens.RPAREN, "RPAREN", pos)
 		pos.Col++
 	case head == '"':
 		value, err := readString(text)

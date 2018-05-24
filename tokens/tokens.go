@@ -29,6 +29,10 @@ type Token struct {
 }
 
 func (t *Token) String() string {
+	return fmt.Sprintf("Token(%s, %s)", t.Type, t.Value)
+}
+
+func (t *Token) Debug() string {
 	return fmt.Sprintf("Token(%s, %s, %s)", t.Type, t.Value, t.Position)
 }
 

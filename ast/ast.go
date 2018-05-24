@@ -3,7 +3,7 @@ package ast
 import (
 	"fmt"
 
-	"github.com/fchoquet/cairn/cairn/tokens"
+	"github.com/fchoquet/cairn/tokens"
 )
 
 type Node interface {

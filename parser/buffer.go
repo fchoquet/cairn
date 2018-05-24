@@ -3,8 +3,8 @@ package parser
 import (
 	"fmt"
 
-	"github.com/fchoquet/cairn/cairn/tokenizer"
-	"github.com/fchoquet/cairn/cairn/tokens"
+	"github.com/fchoquet/cairn/tokenizer"
+	"github.com/fchoquet/cairn/tokens"
 )
 
 // TokenBuffer allows implementation of a LL(n) Recusive Descent Parser

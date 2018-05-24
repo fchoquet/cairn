@@ -3,9 +3,9 @@ package parser
 import (
 	"fmt"
 
-	"github.com/fchoquet/cairn/cairn/ast"
-	"github.com/fchoquet/cairn/cairn/tokenizer"
-	"github.com/fchoquet/cairn/cairn/tokens"
+	"github.com/fchoquet/cairn/ast"
+	"github.com/fchoquet/cairn/tokenizer"
+	"github.com/fchoquet/cairn/tokens"
 )
 
 // Parser reads a text and converts it to an AST using the Tokenizer

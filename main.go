@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fchoquet/cairn/cairn/interpreter"
-	"github.com/fchoquet/cairn/cairn/parser"
+	"github.com/fchoquet/cairn/interpreter"
+	"github.com/fchoquet/cairn/parser"
 )
 
 func main() {

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/fchoquet/cairn/cairn/ast"
-	"github.com/fchoquet/cairn/cairn/parser"
-	"github.com/fchoquet/cairn/cairn/tokens"
+	"github.com/fchoquet/cairn/ast"
+	"github.com/fchoquet/cairn/parser"
+	"github.com/fchoquet/cairn/tokens"
 )
 
 // Interpreter traverses the AST returned by the parser and yields results

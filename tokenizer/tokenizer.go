@@ -1,192 +1,174 @@
 package tokenizer
 
 import (
-	"bytes"
+	"errors"
+	"fmt"
 
 	"github.com/fchoquet/cairn/tokens"
 )
 
-//Tokenize converts source code into tokens
-func Tokenize(fileName string, sourceCode []byte) ([]*tokens.Token, error) {
-	tokens := []*tokens.Token{}
-
-	// splits into lines
-	lines := bytes.Split(sourceCode, []byte("\n"))
-
-	for lineNumber, lineCode := range lines {
-		if lineNumber < len(lines)-1 {
-			// restores the trailing \n
-			lineCode = append(lineCode, "\n"...)
-		}
-
-		tks, err := readLine(fileName, lineNumber, lineCode)
-		if err != nil {
-			return nil, err
-		}
-		tokens = append(tokens, tks...)
-	}
-
-	return tokens, nil
+// Tokenizer transforms a string into a stream of tokens
+type Tokenizer struct {
+	Channel chan *tokens.Token
 }
 
-// readLine extracts all the tokens from a line
-func readLine(fileName string, line int, code []byte) ([]*tokens.Token, error) {
-	return read(tokens.Position{
-		File: fileName,
-		Line: line,
-	}, code)
-}
-
-// read recursively extracts tokens from a string
-// this function is never called from the middle of a multibyte token
-func read(pos tokens.Position, code []byte) ([]*tokens.Token, error) {
-	tks := []*tokens.Token{}
-
-	if len(code) == 0 {
-		return tks, nil
+// Tokenize returns a Tokenizer ready to return tokens
+func Tokenize(fileName, text string) *Tokenizer {
+	t := &Tokenizer{
+		Channel: make(chan *tokens.Token),
 	}
 
-	head := code[0]
-	tail := code[1:]
+	go func() {
+		t.tokenize(text, tokens.Position{
+			File: fileName,
+			Line: 0,
+			Col:  0,
+		})
 
-	switch {
-	// new line
-	case head == '\n':
-		tks = append(tks, createToken(pos, tokens.NewLine, ""))
-	// indentation
-	case head == ' ':
-		tk, newTail, err := readIndentationToken(pos, code)
-		if err != nil {
-			return nil, err
-		}
-		if tk != nil {
-			tks = append(tks, tk)
-		}
-		tail = newTail
-	// number
-	case head >= '0' && head <= '9':
-		tk, newTail, err := readNumberToken(pos, code)
-		if err != nil {
-			return nil, err
-		}
-		if tk != nil {
-			tks = append(tks, tk)
-		}
-		tail = newTail
-	// string litteral
-	case head == '"':
-		tk, newTail, err := readStringToken(pos, code)
-		if err != nil {
-			return nil, err
-		}
-		if tk != nil {
-			tks = append(tks, tk)
-		}
-		tail = newTail
-	// plus operator
-	case head == '+':
-		tks = append(tks, createToken(pos, tokens.Operator, "+"))
-	case head == '*':
-		tks = append(tks, createToken(pos, tokens.Operator, "*"))
-	default:
+		// close the channel to notify completion
+		close(t.Channel)
 
-	}
+		return
+	}()
 
-	// recursively consumes the tail
-	nextTks, err := read(tokens.Position{
-		File: pos.File,
-		Line: pos.Line,
-		Col:  pos.Col + len(code) - len(tail),
-	}, tail)
-	tks = append(tks, nextTks...)
-	return tks, err
+	return t
 }
 
-func createToken(pos tokens.Position, tokenType tokens.TokenType, value string) *tokens.Token {
-	return &tokens.Token{
-		Type:     tokenType,
+// NextToken yields a new token
+// since the channel is blocking, we only yield a new token when this function is called
+// the tokenize function does not have to worry about memory usage
+func (t *Tokenizer) NextToken() (*tokens.Token, error) {
+	tk, ok := <-t.Channel
+	if !ok {
+		return nil, errors.New("can not read after end of file")
+	}
+
+	if tk.Type == tokens.ERROR {
+		return nil, errors.New(tk.Value)
+	}
+
+	return tk, nil
+}
+
+func (t *Tokenizer) yieldToken(tkType tokens.TokenType, value string, pos tokens.Position) {
+	t.Channel <- &tokens.Token{
+		Type:     tkType,
 		Value:    value,
 		Position: pos,
 	}
 }
 
-// reads an indentation and returns the token along with the remaining of the line
-func readIndentationToken(pos tokens.Position, code []byte) (*tokens.Token, []byte, error) {
-	if string(code[0:3]) == "    " {
-		return createToken(pos, tokens.Indentation, ""), code[:4], nil
+// tokenize process a string recursively
+func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
+	if len(text) == 0 {
+		t.yieldToken(tokens.EOF, "", pos)
+		return
 	}
-	// the space is consumed without geneating a token. This is just a space, no big deal
-	return nil, code[1:], nil
+
+	head := text[0]
+	tail := text[1:]
+
+	switch {
+	case isWhiteSpace(head):
+		pos.Col++
+		// simply skip
+	case isDigit(head):
+		value := readInteger(text)
+		tail = text[len(value):]
+		t.yieldToken(tokens.INTEGER, value, pos)
+		pos.Col += len(value)
+	case isIdentifier(head):
+		value := readIdentifier(text)
+		tail = text[len(value):]
+		t.yieldToken(tokens.IDENTIFIER, value, pos)
+		pos.Col += len(value)
+	case head == '+':
+		t.yieldToken(tokens.PLUS, "+", pos)
+		pos.Col++
+	case head == '-':
+		t.yieldToken(tokens.MINUS, "-", pos)
+		pos.Col++
+	case head == '*':
+		t.yieldToken(tokens.MULT, "*", pos)
+		pos.Col++
+	case head == '/':
+		t.yieldToken(tokens.DIV, "/", pos)
+		pos.Col++
+	case head == '(':
+		t.yieldToken(tokens.LPAREN, "(", pos)
+		pos.Col++
+	case head == ')':
+		t.yieldToken(tokens.RPAREN, ")", pos)
+		pos.Col++
+	case head == '"':
+		value, err := readString(text)
+		if err != nil {
+			t.yieldToken(tokens.ERROR, err.Error(), pos)
+			return
+		}
+
+		// value does not contain the surrounding quotes, so let's add 2
+		length := len(value) + 2
+		tail = text[length:]
+		t.yieldToken(tokens.STRING, value, pos)
+		pos.Col += length
+	case head == ':':
+		// might be an assignment
+		if len(tail) == 0 || tail[0] != '=' {
+			t.yieldToken(tokens.ERROR, "Unexpected :", pos)
+		}
+
+		tail = tail[1:]
+		t.yieldToken(tokens.ASSIGN, ":=", pos)
+		pos.Col += 2
+	default:
+		t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error in %s", text), pos)
+		// stop recursion
+		return
+	}
+
+	// recursively tokenize the rest of the string
+	t.tokenize(tail, pos)
 }
 
-// reads a number and returns the token along with the remaining of the line
-func readNumberToken(pos tokens.Position, code []byte) (*tokens.Token, []byte, error) {
-	num := readNumber(code)
-	return createToken(pos, tokens.Number, num), code[len(num):], nil
-}
-
-func readNumber(code []byte) string {
-	if len(code) == 0 {
+func readInteger(input string) string {
+	if input == "" {
 		return ""
 	}
 
-	head := code[0]
-	tail := code[1:]
+	head := input[0]
+	tail := input[1:]
 
-	if head >= '0' && head <= '9' {
-		return string(head) + readNumber(tail)
+	if isDigit(head) {
+		return string(head) + readInteger(tail)
 	}
+
 	return ""
 }
 
-// reads a string and returns the token along with the remaining of the line
-func readStringToken(pos tokens.Position, code []byte) (*tokens.Token, []byte, error) {
-	s := ""
+func readIdentifier(input string) string {
+	if input == "" {
+		return ""
+	}
 
-	// the first char is a ", let's skip it
-	for i := 1; i < len(code); i++ {
-		switch code[i] {
-		case '\\':
-			// next char is escaped. Let's consume it now and skip it in the iteration
-			if i == len(code)-1 {
-				// \ should not be the last char
-				return nil, nil, Error{
-					Message:  "\\ in string litteral does not escape anything",
-					Code:     code,
-					Position: pos,
-					Hint:     "did you mean \\\\ ?",
-				}
-			}
-			switch code[i+1] {
-			case '\\':
-				s += "\\"
-			case '"':
-				s += `"`
-			case 'n':
-				s += "\n"
-			default:
-				return nil, nil, Error{
-					Message:  "invalid escape sequence in string",
-					Code:     code,
-					Position: pos,
-					Hint:     `valid escape sequences are: \\ \" \n`,
-				}
-			}
-			// we've consumed 2 chars
-			i++
-		case '"':
-			return createToken(pos, tokens.String, s), code[i+1:], nil
-		default:
-			// let's add this char to the string
-			s += string(code[i])
-		}
+	head := input[0]
+	tail := input[1:]
+
+	if isIdentifier(head) {
+		return string(head) + readIdentifier(tail)
 	}
-	// could not find the end of the string
-	// multiline strings are not allowed for now
-	return nil, nil, Error{
-		Message:  "could not find end of string",
-		Code:     code,
-		Position: pos,
-		Hint:     `you must have forgotten the closing " or forgotten to escape one`,
-	}
+
+	return ""
+}
+
+func isWhiteSpace(char byte) bool {
+	return char <= ' '
+}
+
+func isDigit(char byte) bool {
+	return char >= '0' && char <= '9'
+}
+
+func isIdentifier(char byte) bool {
+	return (char >= 'A' && char <= 'z') || char == '_'
 }

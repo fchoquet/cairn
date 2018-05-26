@@ -2,31 +2,41 @@
 
 Experimentations and exploration around programming languages and compilators.
 
-# Context Free Grammar
-
-## Expression
+# Arithmetic
 
 ```
-expr : assignment | arithmexpr | strexpr
-```
+12
+> 12
 
-## Assignment
+12 + 34
+> 46
 
-```
-assignment : IDENTIFIER ASSIGN expr
-```
-
-## Arithmetic expressions
-
-```
-arithmexpr : term ((PLUS | MINUS) term)*
-term       : factor ((MUL | DIV) factor)*
-factor     : (PLUS|MINUS)factor | INTEGER | IDENTIFIER | LPAREN arithmexpr RPAREN 
+(12 + 34) * 56 / 16
+> 161
 ```
 
 ## Strings
 
 ```
-strexpr : str (CONCAT str)*
-str     : STRING | IDENTIFIER
+"hello"
+> hello
+
+"hello \"Fred\""
+> hello "Fred"
+
+"hello" ++ "world"
+> hello world
+```
+
+## Variables
+
+```
+foo := "hello"
+> hello
+
+bar := " world"
+> world
+
+foo ++ bar
+> hello world
 ```

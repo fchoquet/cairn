@@ -73,8 +73,29 @@ func TestPrimaryTypes(t *testing.T) {
 	})
 }
 
-func TestArithmeticExpressions(t *testing.T) {
+func TestBasicExpressions(t *testing.T) {
 	assert := assert.New(t)
+
+	t.Run("string concatenation", func(t *testing.T) {
+		fixtures := []struct {
+			input    string
+			expected string
+		}{
+			{`"foo" ++ "bar"`, `Token(STRING, foo),Token(CONCAT, ++),Token(STRING, bar)`},
+		}
+
+		for _, f := range fixtures {
+			tokenizer := Tokenize("test.ca", f.input)
+
+			tks := []string{}
+			tk, err := tokenizer.NextToken()
+			for ; err == nil && tk != nil && tk.Type != tokens.EOF; tk, err = tokenizer.NextToken() {
+				tks = append(tks, tk.String())
+			}
+			assert.Equal(f.expected, strings.Join(tks, ","))
+		}
+
+	})
 
 	t.Run("basic arithmentic expressions", func(t *testing.T) {
 		fixtures := []struct {

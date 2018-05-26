@@ -50,9 +50,10 @@ func (p *Parser) expr() (ast.Node, error) {
 		switch next.Type {
 		case tokens.ASSIGN:
 			return p.assignment()
+		case tokens.CONCAT:
+			return p.strexpr()
 		default:
-			p.consume(tokens.IDENTIFIER)
-			return &ast.Variable{Token: token, Name: token.Value}, nil
+			return p.arithmexpr()
 		}
 	case tokens.STRING:
 		return p.strexpr()
@@ -174,8 +175,8 @@ func (p *Parser) strexpr() (ast.Node, error) {
 		return nil, err
 	}
 
-	for p.current().Type == tokens.PLUS {
-		token, _ := p.consume(tokens.PLUS)
+	for p.current().Type == tokens.CONCAT {
+		token, _ := p.consume(tokens.CONCAT)
 
 		right, err := p.str()
 		if err != nil {

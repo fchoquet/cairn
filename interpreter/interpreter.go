@@ -112,16 +112,10 @@ func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
 		return "", err
 	}
 
-	switch node.Left.GetToken().Type {
-	case tokens.STRING:
-		switch node.Op.Type {
-		case tokens.PLUS:
-			return left + right, nil
-		default:
-			return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
-		}
-
-	case tokens.INTEGER:
+	switch node.Op.Type {
+	case tokens.CONCAT:
+		return (left + right), nil
+	default:
 		// string to int conversions
 		leftVal, err := strconv.Atoi(left)
 		if err != nil {
@@ -145,9 +139,6 @@ func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
 		default:
 			return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
 		}
-
-	default:
-		return "", fmt.Errorf("can not interpret operation on type %s", node.Left.GetToken().Type)
 	}
 }
 

@@ -13,6 +13,7 @@ const (
 	MINUS      TokenType = "MINUS"
 	MULT       TokenType = "MULT"
 	DIV        TokenType = "DIV"
+	CONCAT     TokenType = "CONCAT"
 	EOF        TokenType = "EOF"
 	LPAREN     TokenType = "LPAREN"
 	RPAREN     TokenType = "RPAREN"

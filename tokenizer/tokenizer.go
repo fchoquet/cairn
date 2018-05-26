@@ -80,11 +80,21 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 	case isIdentifier(head):
 		value := readIdentifier(text)
 		tail = text[len(value):]
-		t.yieldToken(tokens.IDENTIFIER, value, pos)
+		// keywords should not be treated as identifiers!
+		switch value {
+		default:
+			t.yieldToken(tokens.IDENTIFIER, value, pos)
+		}
 		pos.Col += len(value)
 	case head == '+':
-		t.yieldToken(tokens.PLUS, "+", pos)
-		pos.Col++
+		if len(tail) > 0 && tail[0] == '+' {
+			tail = text[2:]
+			t.yieldToken(tokens.CONCAT, "++", pos)
+			pos.Col += 2
+		} else {
+			t.yieldToken(tokens.PLUS, "+", pos)
+			pos.Col++
+		}
 	case head == '-':
 		t.yieldToken(tokens.MINUS, "-", pos)
 		pos.Col++

@@ -53,16 +53,20 @@ func (i *Interpreter) visit(node ast.Node) (string, error) {
 		return i.visitNum(num)
 	}
 
+	if str, ok := node.(*ast.String); ok {
+		return i.visitString(str)
+	}
+
+	if b, ok := node.(*ast.Bool); ok {
+		return i.visitBool(b)
+	}
+
 	if unaryOp, ok := node.(*ast.UnaryOp); ok {
 		return i.visitUnaryOp(unaryOp)
 	}
 
 	if binOp, ok := node.(*ast.BinOp); ok {
 		return i.visitBinOp(binOp)
-	}
-
-	if str, ok := node.(*ast.String); ok {
-		return i.visitString(str)
 	}
 
 	if str, ok := node.(*ast.Assignment); ok {
@@ -80,25 +84,41 @@ func (i *Interpreter) visitNum(node *ast.Num) (string, error) {
 	return node.Value, nil
 }
 
+func (i *Interpreter) visitString(node *ast.String) (string, error) {
+	return node.Value, nil
+}
+
+func (i *Interpreter) visitBool(node *ast.Bool) (string, error) {
+	return node.Value, nil
+}
+
 func (i *Interpreter) visitUnaryOp(node *ast.UnaryOp) (string, error) {
 	expr, err := i.visit(node.Expr)
 	if err != nil {
 		return "", err
 	}
 
-	val, err := strconv.Atoi(expr)
-	if err != nil {
-		return "", err
-	}
-
 	switch node.Op.Type {
-	case tokens.PLUS:
-		return strconv.Itoa(+val), nil
-	case tokens.MINUS:
-		return strconv.Itoa(-val), nil
+	case tokens.NOT:
+		val, err := strconv.ParseBool(expr)
+		if err != nil {
+			return "", err
+		}
+		return strconv.FormatBool(!val), err
+	default:
+		val, err := strconv.Atoi(expr)
+		if err != nil {
+			return "", err
+		}
+		switch node.Op.Type {
+		case tokens.PLUS:
+			return strconv.Itoa(+val), nil
+		case tokens.MINUS:
+			return strconv.Itoa(-val), nil
+		default:
+			return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
+		}
 	}
-
-	return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
 }
 
 func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
@@ -115,6 +135,25 @@ func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
 	switch node.Op.Type {
 	case tokens.CONCAT:
 		return (left + right), nil
+	case tokens.EQ, tokens.NEQ:
+		// string to bool conversions
+		leftVal, err := strconv.ParseBool(left)
+		if err != nil {
+			return "", err
+		}
+		rightVal, err := strconv.ParseBool(right)
+		if err != nil {
+			return "", err
+		}
+
+		switch node.Op.Type {
+		case tokens.EQ:
+			return strconv.FormatBool(leftVal == rightVal), nil
+		case tokens.NEQ:
+			return strconv.FormatBool(leftVal != rightVal), nil
+		default:
+			return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
+		}
 	default:
 		// string to int conversions
 		leftVal, err := strconv.Atoi(left)
@@ -140,10 +179,6 @@ func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
 			return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
 		}
 	}
-}
-
-func (i *Interpreter) visitString(node *ast.String) (string, error) {
-	return node.Value, nil
 }
 
 func (i *Interpreter) visitAssignment(node *ast.Assignment) (string, error) {

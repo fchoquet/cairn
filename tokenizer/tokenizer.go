@@ -77,11 +77,13 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 		tail = text[len(value):]
 		t.yieldToken(tokens.INTEGER, value, pos)
 		pos.Col += len(value)
-	case isIdentifier(head):
+	case isAlpha(head):
 		value := readIdentifier(text)
 		tail = text[len(value):]
 		// keywords should not be treated as identifiers!
 		switch value {
+		case "true", "false":
+			t.yieldToken(tokens.BOOL, value, pos)
 		default:
 			t.yieldToken(tokens.IDENTIFIER, value, pos)
 		}
@@ -126,11 +128,31 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 		// might be an assignment
 		if len(tail) == 0 || tail[0] != '=' {
 			t.yieldToken(tokens.ERROR, "Unexpected :", pos)
+			return
 		}
 
 		tail = tail[1:]
 		t.yieldToken(tokens.ASSIGN, ":=", pos)
 		pos.Col += 2
+	case head == '=':
+		// might be an equality comparison
+		if len(tail) == 0 || tail[0] != '=' {
+			t.yieldToken(tokens.ERROR, "Unexpected :", pos)
+			return
+		}
+
+		tail = tail[1:]
+		t.yieldToken(tokens.EQ, "==", pos)
+		pos.Col += 2
+	case head == '!':
+		if len(tail) > 0 && tail[0] == '=' {
+			tail = tail[1:]
+			t.yieldToken(tokens.NEQ, "!=", pos)
+			pos.Col += 2
+		} else {
+			t.yieldToken(tokens.NOT, "!", pos)
+			pos.Col++
+		}
 	default:
 		t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error in %s", text), pos)
 		// stop recursion
@@ -164,7 +186,7 @@ func readIdentifier(input string) string {
 	head := input[0]
 	tail := input[1:]
 
-	if isIdentifier(head) {
+	if isAlpha(head) {
 		return string(head) + readIdentifier(tail)
 	}
 
@@ -179,6 +201,6 @@ func isDigit(char byte) bool {
 	return char >= '0' && char <= '9'
 }
 
-func isIdentifier(char byte) bool {
+func isAlpha(char byte) bool {
 	return (char >= 'A' && char <= 'z') || char == '_'
 }

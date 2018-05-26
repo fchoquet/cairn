@@ -71,6 +71,26 @@ func TestPrimaryTypes(t *testing.T) {
 		}
 
 	})
+
+	t.Run("reads booleans", func(t *testing.T) {
+		fixtures := []struct {
+			input    string
+			expected string
+		}{
+			{`true`, `true`},
+			{`false`, `false`},
+		}
+
+		for _, f := range fixtures {
+			token, err := Tokenize("test.ca", f.input).NextToken()
+			if !assert.Nil(err) {
+				continue
+			}
+			assert.Equal(tokens.BOOL, token.Type)
+			assert.Equal(f.expected, token.Value)
+		}
+
+	})
 }
 
 func TestBasicExpressions(t *testing.T) {

@@ -52,11 +52,15 @@ func (p *Parser) expr() (ast.Node, error) {
 			return p.assignment()
 		case tokens.CONCAT:
 			return p.strexpr()
+		case tokens.EQ, tokens.NEQ:
+			return p.boolexpr()
 		default:
 			return p.arithmexpr()
 		}
 	case tokens.STRING:
 		return p.strexpr()
+	case tokens.BOOL, tokens.NOT:
+		return p.boolexpr()
 	default:
 		return p.arithmexpr()
 	}

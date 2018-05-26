@@ -4,7 +4,7 @@
 ## Expressions
 
 ```
-expr : assignment | operation
+expr : assignment | arithmexpr | strexpr | boolexpr
 
 ```
 
@@ -27,4 +27,12 @@ factor     : (PLUS|MINUS)factor | INTEGER | IDENTIFIER | LPAREN arithmexpr RPARE
 ```
 strexpr : str (CONCAT str)*
 str     : STRING | IDENTIFIER
+```
+
+## Boolean expressions
+
+```
+boolexpr : boolterm ((EQ | NEQ ) boolterm)*
+boolterm: (NOT)boolterm | bool | LPAREN boolexpr RPAREN
+bool: BOOL | IDENTIFIER
 ```

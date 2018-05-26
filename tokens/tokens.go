@@ -9,6 +9,8 @@ type TokenType string
 const (
 	ERROR      TokenType = "ERROR"
 	INTEGER    TokenType = "INTEGER"
+	STRING     TokenType = "STRING"
+	BOOL       TokenType = "BOOL"
 	PLUS       TokenType = "PLUS"
 	MINUS      TokenType = "MINUS"
 	MULT       TokenType = "MULT"
@@ -17,9 +19,11 @@ const (
 	EOF        TokenType = "EOF"
 	LPAREN     TokenType = "LPAREN"
 	RPAREN     TokenType = "RPAREN"
-	STRING     TokenType = "STRING"
-	IDENTIFIER TokenType = "IDENTIFIER"
 	ASSIGN     TokenType = "ASSIGN"
+	IDENTIFIER TokenType = "IDENTIFIER"
+	NOT        TokenType = "NOT"
+	EQ         TokenType = "EQ"
+	NEQ        TokenType = "NEQ"
 )
 
 // Token reprensents the result of a lexical analysis

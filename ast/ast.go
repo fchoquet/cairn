@@ -68,6 +68,20 @@ func (str *String) String() string {
 	return fmt.Sprintf("String(%s)", str.Token)
 }
 
+type Bool struct {
+	Token *tokens.Token
+	Value string
+}
+
+// GetToken implements the Node interface
+func (b *Bool) GetToken() *tokens.Token {
+	return b.Token
+}
+
+func (b *Bool) String() string {
+	return fmt.Sprintf("Bool(%s)", b.Token)
+}
+
 // Assignment represent and assignment in an AST
 type Assignment struct {
 	Token    *tokens.Token
@@ -96,5 +110,5 @@ func (v *Variable) GetToken() *tokens.Token {
 }
 
 func (v *Variable) String() string {
-	return fmt.Sprintf("Identifier(%s)", v.Name)
+	return fmt.Sprintf("Variable(%s)", v.Name)
 }

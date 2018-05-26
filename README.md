@@ -28,6 +28,28 @@ Experimentations and exploration around programming languages and compilators.
 > hello world
 ```
 
+## Booleans
+
+```
+true
+> true
+
+false
+> false
+
+true == false
+false
+
+!true != !false
+true
+
+# TODO: Fix this case
+(true == false) != false
+false
+
+```
+
+
 ## Variables
 
 ```

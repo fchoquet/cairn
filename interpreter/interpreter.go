@@ -136,21 +136,13 @@ func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
 	case tokens.CONCAT:
 		return (left + right), nil
 	case tokens.EQ, tokens.NEQ:
-		// string to bool conversions
-		leftVal, err := strconv.ParseBool(left)
-		if err != nil {
-			return "", err
-		}
-		rightVal, err := strconv.ParseBool(right)
-		if err != nil {
-			return "", err
-		}
-
+		// TODO: improve!
+		// currently it only works if same string representation
 		switch node.Op.Type {
 		case tokens.EQ:
-			return strconv.FormatBool(leftVal == rightVal), nil
+			return strconv.FormatBool(left == right), nil
 		case tokens.NEQ:
-			return strconv.FormatBool(leftVal != rightVal), nil
+			return strconv.FormatBool(left != right), nil
 		default:
 			return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
 		}

@@ -8,27 +8,6 @@ import (
 	"github.com/fchoquet/cairn/tokens"
 )
 
-type associativity string
-
-const (
-	AssocLeft  associativity = "left"
-	AssocRight associativity = "right"
-)
-
-var BinaryOpPrecedence = map[tokens.TokenType]int{
-	tokens.PLUS:  1,
-	tokens.MINUS: 1,
-	tokens.MULT:  2,
-	tokens.DIV:   2,
-}
-
-var BinaryOpAssociativity = map[tokens.TokenType]associativity{
-	tokens.PLUS:  AssocLeft,
-	tokens.MINUS: AssocLeft,
-	tokens.MULT:  AssocLeft,
-	tokens.DIV:   AssocLeft,
-}
-
 // Parser reads a text and converts it to an AST using the Tokenizer
 type Parser struct {
 	buffer TokenBuffer
@@ -231,23 +210,5 @@ func (p *Parser) basicLit() (ast.Node, error) {
 		return &ast.Bool{Token: tk, Value: tk.Value}, nil
 	default:
 		return nil, fmt.Errorf("unexpected basic litteral: %s:%s", tk.Value, tk.Type)
-	}
-}
-
-func isUnaryOp(tk *tokens.Token) bool {
-	switch tk.Type {
-	case tokens.NOT:
-		return true
-	default:
-		return false
-	}
-}
-
-func isBinaryOp(tk *tokens.Token) bool {
-	switch tk.Type {
-	case tokens.PLUS, tokens.MINUS, tokens.MULT, tokens.DIV, tokens.EQ, tokens.NEQ:
-		return true
-	default:
-		return false
 	}
 }

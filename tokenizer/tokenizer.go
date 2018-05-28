@@ -106,6 +106,9 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 	case head == '/':
 		t.yieldToken(tokens.DIV, "/", pos)
 		pos.Col++
+	case head == '^':
+		t.yieldToken(tokens.POW, "^", pos)
+		pos.Col++
 	case head == '(':
 		t.yieldToken(tokens.LPAREN, "LPAREN", pos)
 		pos.Col++
@@ -202,5 +205,5 @@ func isDigit(char byte) bool {
 }
 
 func isAlpha(char byte) bool {
-	return (char >= 'A' && char <= 'z') || char == '_'
+	return (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || char == '_'
 }

@@ -1,6 +1,8 @@
 package parser
 
-import "github.com/fchoquet/cairn/tokens"
+import (
+	"github.com/fchoquet/cairn/tokens"
+)
 
 type associativity string
 
@@ -15,6 +17,7 @@ var BinaryOpPrecedence = map[tokens.TokenType]int{
 	tokens.MINUS: 1,
 	tokens.MULT:  2,
 	tokens.DIV:   2,
+	tokens.POW:   3,
 
 	// operating on strings
 	tokens.CONCAT: 1,
@@ -22,8 +25,8 @@ var BinaryOpPrecedence = map[tokens.TokenType]int{
 	// operating on booleans
 
 	// general purpose
-	tokens.EQ:  3,
-	tokens.NEQ: 3,
+	tokens.EQ:  4,
+	tokens.NEQ: 4,
 }
 
 var BinaryOpAssociativity = map[tokens.TokenType]associativity{
@@ -32,6 +35,7 @@ var BinaryOpAssociativity = map[tokens.TokenType]associativity{
 	tokens.MINUS: AssocLeft,
 	tokens.MULT:  AssocLeft,
 	tokens.DIV:   AssocLeft,
+	tokens.POW:   AssocRight,
 
 	// operating on strings
 	tokens.CONCAT: AssocLeft,
@@ -60,6 +64,7 @@ func isBinaryOp(tk *tokens.Token) bool {
 		tokens.MINUS,
 		tokens.MULT,
 		tokens.DIV,
+		tokens.POW,
 		tokens.EQ,
 		tokens.NEQ,
 		tokens.CONCAT:

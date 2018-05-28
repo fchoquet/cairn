@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/fchoquet/cairn/ast"
@@ -137,7 +138,7 @@ func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
 		return (left + right), nil
 	case tokens.EQ, tokens.NEQ:
 		// TODO: improve!
-		// currently it only works if same string representation
+		// currently it works if same string representation
 		switch node.Op.Type {
 		case tokens.EQ:
 			return strconv.FormatBool(left == right), nil
@@ -146,6 +147,19 @@ func (i *Interpreter) visitBinOp(node *ast.BinOp) (string, error) {
 		default:
 			return "", fmt.Errorf("unexpected binary operator: %s", node.Op)
 		}
+	case tokens.POW:
+		// we need floats to use math.Pow but we expect ints only for now
+		leftVal, err := strconv.ParseFloat(left, 64)
+		if err != nil {
+			return "", err
+		}
+		rightVal, err := strconv.ParseFloat(right, 64)
+		if err != nil {
+			return "", err
+		}
+		// watch the int conversion here
+		return strconv.Itoa(int(math.Pow(leftVal, rightVal))), nil
+
 	default:
 		// string to int conversions
 		leftVal, err := strconv.Atoi(left)

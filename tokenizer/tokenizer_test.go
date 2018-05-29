@@ -126,6 +126,7 @@ func TestBasicExpressions(t *testing.T) {
 			{`12 - 34`, `Token(INTEGER, 12),Token(MINUS, -),Token(INTEGER, 34)`},
 			{`12 * 34`, `Token(INTEGER, 12),Token(MULT, *),Token(INTEGER, 34)`},
 			{`12 / 34`, `Token(INTEGER, 12),Token(DIV, /),Token(INTEGER, 34)`},
+			{`12^34`, `Token(INTEGER, 12),Token(POW, ^),Token(INTEGER, 34)`},
 			{`12 * (34 + 56)`, `Token(INTEGER, 12),Token(MULT, *),Token(LPAREN, LPAREN),Token(INTEGER, 34),Token(PLUS, +),Token(INTEGER, 56),Token(RPAREN, RPAREN)`},
 		}
 

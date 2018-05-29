@@ -7,6 +7,7 @@ import (
 )
 
 type Node interface {
+	fmt.Stringer
 	// GetToken returns the token associated with this node
 	GetToken() *tokens.Token
 }
@@ -22,7 +23,7 @@ func (op *UnaryOp) GetToken() *tokens.Token {
 }
 
 func (op *UnaryOp) String() string {
-	return fmt.Sprintf("UnaryOp(%s, %s)\n", op.Op, op.Expr)
+	return fmt.Sprintf("UnaryOp(%s %s)", op.Op, op.Expr)
 }
 
 type BinOp struct {
@@ -37,7 +38,7 @@ func (op *BinOp) GetToken() *tokens.Token {
 }
 
 func (op *BinOp) String() string {
-	return fmt.Sprintf("BinOp(\n%s,\n%s,\n%s\n)\n", op.Left, op.Op, op.Right)
+	return fmt.Sprintf("BinOp(%s %s %s)", op.Op, op.Left, op.Right)
 }
 
 type Num struct {
@@ -95,7 +96,7 @@ func (asgn *Assignment) GetToken() *tokens.Token {
 }
 
 func (asgn *Assignment) String() string {
-	return fmt.Sprintf("Assign(%s := %s)", asgn.Variable, asgn.Right)
+	return fmt.Sprintf("Assign(%s %s)", asgn.Variable, asgn.Right)
 }
 
 // Variable represents a variable in an AST

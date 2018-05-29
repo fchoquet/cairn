@@ -35,11 +35,11 @@ type Token struct {
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("Token(%s, %s)", t.Type, t.Value)
+	return fmt.Sprintf("%s:%s", t.Value, t.Type)
 }
 
 func (t *Token) Debug() string {
-	return fmt.Sprintf("Token(%s, %s, %s)", t.Type, t.Value, t.Position)
+	return fmt.Sprintf("%s:%s@%s", t.Value, t.Type, t.Position)
 }
 
 // Position represents the position of a token in the source code

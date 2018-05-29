@@ -3,6 +3,7 @@ package tokenizer
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/fchoquet/cairn/tokens"
 )
@@ -23,7 +24,7 @@ func Tokenize(fileName, text string) *Tokenizer {
 			File: fileName,
 			Line: 0,
 			Col:  0,
-		})
+		}, 0)
 
 		// close the channel to notify completion
 		close(t.Channel)
@@ -59,7 +60,7 @@ func (t *Tokenizer) yieldToken(tkType tokens.TokenType, value string, pos tokens
 }
 
 // tokenize process a string recursively
-func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
+func (t *Tokenizer) tokenize(text string, pos tokens.Position, indent int) {
 	if len(text) == 0 {
 		t.yieldToken(tokens.EOF, "", pos)
 		return
@@ -69,6 +70,23 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 	tail := text[1:]
 
 	switch {
+	case head == '\n':
+		oldIndent := indent
+		var consumed int
+		indent, consumed = consumeTab(tail)
+		switch {
+		case indent > oldIndent:
+			// indentation increased => begin block
+			t.yieldToken(tokens.BEGIN, "BEGIN"+strconv.Itoa(indent), pos)
+		case indent < oldIndent:
+			// indentation decreased => end block
+			t.yieldToken(tokens.END, "END"+strconv.Itoa(oldIndent), pos)
+		default:
+			// no indentation change. Simply yields an EOL
+			t.yieldToken(tokens.EOL, "EOL", pos)
+		}
+
+		pos.Col += 1 + consumed
 	case isWhiteSpace(head):
 		pos.Col++
 		// simply skip
@@ -181,7 +199,7 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 	}
 
 	// recursively tokenize the rest of the string
-	t.tokenize(tail, pos)
+	t.tokenize(tail, pos, indent)
 }
 
 func readInteger(input string) string {
@@ -215,7 +233,7 @@ func readIdentifier(input string) string {
 }
 
 func isWhiteSpace(char byte) bool {
-	return char <= ' '
+	return char <= ' ' && char != '\n'
 }
 
 func isDigit(char byte) bool {
@@ -224,6 +242,29 @@ func isDigit(char byte) bool {
 
 func isAlpha(char byte) bool {
 	return (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || char == '_'
+}
+
+func consumeTab(s string) (tabs int, consumed int) {
+	if len(s) == 0 {
+		return
+	}
+
+	switch s[0] {
+	// space
+	case ' ':
+		if len(s) < 4 {
+			return
+		}
+		if string(s[0:4]) == "    " {
+			tabs, consumed = consumeTab(s[4:])
+			return tabs + 1, consumed + 4
+		}
+	// tab
+	case '	':
+		tabs, consumed = consumeTab(s[1:])
+		return tabs + 1, consumed + 1
+	}
+	return
 }
 
 // Flush all remaining tokens

@@ -175,6 +175,47 @@ func TestAssignments(t *testing.T) {
 	})
 }
 
+func TestIndentation(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("blocks", func(t *testing.T) {
+		fixtures := []struct {
+			input    string
+			expected string
+		}{
+			{
+				`12
+    34`,
+				`12:INTEGER,BEGIN1:BEGIN,34:INTEGER`,
+			},
+			{
+				`12
+    34
+        56
+        78
+	90
+12`,
+				`12:INTEGER,BEGIN1:BEGIN,34:INTEGER,BEGIN2:BEGIN,56:INTEGER,EOL:EOL,78:INTEGER,END2:END,90:INTEGER,END1:END,12:INTEGER`,
+			},
+		}
+
+		for _, f := range fixtures {
+			tks, err := Tokenize("test.ca", f.input).Flush()
+			if !assert.Nil(err) {
+				continue
+			}
+
+			stringTks := []string{}
+			for _, tk := range tks {
+				stringTks = append(stringTks, tk.String())
+			}
+
+			assert.Equal(f.expected, strings.Join(stringTks, ","))
+		}
+
+	})
+}
+
 func TestBuffer(t *testing.T) {
 	assert := assert.New(t)
 	t.Run("reads tokens until the end of input", func(t *testing.T) {

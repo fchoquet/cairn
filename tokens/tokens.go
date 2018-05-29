@@ -8,6 +8,10 @@ type TokenType string
 // Token types
 const (
 	ERROR      TokenType = "ERROR"
+	EOF        TokenType = "EOF"
+	EOL        TokenType = "EOL"
+	BEGIN      TokenType = "BEGIN"
+	END        TokenType = "END"
 	INTEGER    TokenType = "INTEGER"
 	STRING     TokenType = "STRING"
 	BOOL       TokenType = "BOOL"
@@ -17,7 +21,6 @@ const (
 	DIV        TokenType = "DIV"
 	POW        TokenType = "POW"
 	CONCAT     TokenType = "CONCAT"
-	EOF        TokenType = "EOF"
 	LPAREN     TokenType = "LPAREN"
 	RPAREN     TokenType = "RPAREN"
 	ASSIGN     TokenType = "ASSIGN"

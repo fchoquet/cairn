@@ -96,51 +96,52 @@ func TestPrimaryTypes(t *testing.T) {
 func TestBasicExpressions(t *testing.T) {
 	assert := assert.New(t)
 
-	t.Run("string concatenation", func(t *testing.T) {
+	t.Run("valid basic expressions", func(t *testing.T) {
 		fixtures := []struct {
 			input    string
 			expected string
 		}{
-			{`"foo" ++ "bar"`, `Token(STRING, foo),Token(CONCAT, ++),Token(STRING, bar)`},
+			{`"foo" ++ "bar"`, `foo:STRING,++:CONCAT,bar:STRING`},
+			{`12 + 34`, `12:INTEGER,+:PLUS,34:INTEGER`},
+			{`12 - 34`, `12:INTEGER,-:MINUS,34:INTEGER`},
+			{`12 * 34`, `12:INTEGER,*:MULT,34:INTEGER`},
+			{`12 / 34`, `12:INTEGER,/:DIV,34:INTEGER`},
+			{`12^34`, `12:INTEGER,^:POW,34:INTEGER`},
+			{`12 * (34 + 56)`, `12:INTEGER,*:MULT,LPAREN:LPAREN,34:INTEGER,+:PLUS,56:INTEGER,RPAREN:RPAREN`},
+			{`12 == 34`, `12:INTEGER,==:EQ,34:INTEGER`},
+			{`12 != 34`, `12:INTEGER,!=:NEQ,34:INTEGER`},
+			{`!true`, `!:NOT,true:BOOL`},
+			{`true && false`, `true:BOOL,&&:AND,false:BOOL`},
+			{`true || false`, `true:BOOL,||:OR,false:BOOL`},
 		}
 
 		for _, f := range fixtures {
-			tokenizer := Tokenize("test.ca", f.input)
-
-			tks := []string{}
-			tk, err := tokenizer.NextToken()
-			for ; err == nil && tk != nil && tk.Type != tokens.EOF; tk, err = tokenizer.NextToken() {
-				tks = append(tks, tk.String())
+			tks, err := Tokenize("test.ca", f.input).Flush()
+			if !assert.Nil(err) {
+				continue
 			}
-			assert.Equal(f.expected, strings.Join(tks, ","))
+
+			stringTks := []string{}
+			for _, tk := range tks {
+				stringTks = append(stringTks, tk.String())
+			}
+
+			assert.Equal(f.expected, strings.Join(stringTks, ","))
 		}
 
 	})
 
-	t.Run("basic arithmentic expressions", func(t *testing.T) {
-		fixtures := []struct {
-			input    string
-			expected string
-		}{
-			{`12 + 34`, `Token(INTEGER, 12),Token(PLUS, +),Token(INTEGER, 34)`},
-			{`12 - 34`, `Token(INTEGER, 12),Token(MINUS, -),Token(INTEGER, 34)`},
-			{`12 * 34`, `Token(INTEGER, 12),Token(MULT, *),Token(INTEGER, 34)`},
-			{`12 / 34`, `Token(INTEGER, 12),Token(DIV, /),Token(INTEGER, 34)`},
-			{`12^34`, `Token(INTEGER, 12),Token(POW, ^),Token(INTEGER, 34)`},
-			{`12 * (34 + 56)`, `Token(INTEGER, 12),Token(MULT, *),Token(LPAREN, LPAREN),Token(INTEGER, 34),Token(PLUS, +),Token(INTEGER, 56),Token(RPAREN, RPAREN)`},
+	t.Run("syntaxically invalid basic expressions", func(t *testing.T) {
+		fixtures := []string{
+			`12 = 34`,
+			`true & false`,
+			`true | false`,
 		}
 
 		for _, f := range fixtures {
-			tokenizer := Tokenize("test.ca", f.input)
-
-			tks := []string{}
-			tk, err := tokenizer.NextToken()
-			for ; err == nil && tk != nil && tk.Type != tokens.EOF; tk, err = tokenizer.NextToken() {
-				tks = append(tks, tk.String())
-			}
-			assert.Equal(f.expected, strings.Join(tks, ","))
+			_, err := Tokenize("test.ca", f).Flush()
+			assert.Error(err)
 		}
-
 	})
 }
 
@@ -152,20 +153,23 @@ func TestAssignments(t *testing.T) {
 			input    string
 			expected string
 		}{
-			{`foo := 123`, `Token(IDENTIFIER, foo),Token(ASSIGN, :=),Token(INTEGER, 123)`},
-			{`bar := "bar"`, `Token(IDENTIFIER, bar),Token(ASSIGN, :=),Token(STRING, bar)`},
-			{`foo := 1+2`, `Token(IDENTIFIER, foo),Token(ASSIGN, :=),Token(INTEGER, 1),Token(PLUS, +),Token(INTEGER, 2)`},
+			{`foo := 123`, `foo:IDENTIFIER,:=:ASSIGN,123:INTEGER`},
+			{`bar := "bar"`, `bar:IDENTIFIER,:=:ASSIGN,bar:STRING`},
+			{`foo := 1+2`, `foo:IDENTIFIER,:=:ASSIGN,1:INTEGER,+:PLUS,2:INTEGER`},
 		}
 
 		for _, f := range fixtures {
-			tokenizer := Tokenize("test.ca", f.input)
-
-			tks := []string{}
-			tk, err := tokenizer.NextToken()
-			for ; err == nil && tk != nil && tk.Type != tokens.EOF; tk, err = tokenizer.NextToken() {
-				tks = append(tks, tk.String())
+			tks, err := Tokenize("test.ca", f.input).Flush()
+			if !assert.Nil(err) {
+				continue
 			}
-			assert.Equal(f.expected, strings.Join(tks, ","))
+
+			stringTks := []string{}
+			for _, tk := range tks {
+				stringTks = append(stringTks, tk.String())
+			}
+
+			assert.Equal(f.expected, strings.Join(stringTks, ","))
 		}
 
 	})

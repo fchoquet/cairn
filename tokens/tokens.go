@@ -23,6 +23,8 @@ const (
 	ASSIGN     TokenType = "ASSIGN"
 	IDENTIFIER TokenType = "IDENTIFIER"
 	NOT        TokenType = "NOT"
+	AND        TokenType = "AND"
+	OR         TokenType = "OR"
 	EQ         TokenType = "EQ"
 	NEQ        TokenType = "NEQ"
 )

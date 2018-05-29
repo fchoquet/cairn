@@ -77,6 +77,35 @@ func TestParser(t *testing.T) {
 				`"foo" ++ ("bar" ++ "baz")`,
 				`BinOp(++:CONCAT String(foo:STRING) BinOp(++:CONCAT String(bar:STRING) String(baz:STRING)))`,
 			},
+			{
+				`true`,
+				`Bool(true:BOOL)`,
+			},
+			{
+				`false`,
+				`Bool(false:BOOL)`,
+			},
+			{
+				`true && true`,
+				`BinOp(&&:AND Bool(true:BOOL) Bool(true:BOOL))`,
+			},
+			{
+				`false || true`,
+				`BinOp(||:OR Bool(false:BOOL) Bool(true:BOOL))`,
+			},
+			{
+				`true && false || true`,
+				`BinOp(||:OR BinOp(&&:AND Bool(true:BOOL) Bool(false:BOOL)) Bool(true:BOOL))`,
+			},
+			{
+				`true && (false || true)`,
+				`BinOp(&&:AND Bool(true:BOOL) BinOp(||:OR Bool(false:BOOL) Bool(true:BOOL)))`,
+			},
+			// complex operator precedence
+			{
+				`2*2==2^2 && true==(2==2)`,
+				`BinOp(&&:AND BinOp(==:EQ BinOp(*:MULT Num(2:INTEGER) Num(2:INTEGER)) BinOp(^:POW Num(2:INTEGER) Num(2:INTEGER))) BinOp(==:EQ Bool(true:BOOL) BinOp(==:EQ Num(2:INTEGER) Num(2:INTEGER))))`,
+			},
 		}
 
 		for _, f := range fixtures {

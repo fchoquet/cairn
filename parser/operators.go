@@ -13,20 +13,22 @@ const (
 
 var BinaryOpPrecedence = map[tokens.TokenType]int{
 	// operating on numbers
-	tokens.PLUS:  1,
-	tokens.MINUS: 1,
-	tokens.MULT:  2,
-	tokens.DIV:   2,
-	tokens.POW:   3,
+	tokens.PLUS:  4,
+	tokens.MINUS: 4,
+	tokens.MULT:  5,
+	tokens.DIV:   5,
+	tokens.POW:   6,
 
 	// operating on strings
-	tokens.CONCAT: 1,
+	tokens.CONCAT: 4,
 
 	// operating on booleans
+	tokens.OR:  1,
+	tokens.AND: 2,
 
 	// general purpose
-	tokens.EQ:  4,
-	tokens.NEQ: 4,
+	tokens.EQ:  3,
+	tokens.NEQ: 3,
 }
 
 var BinaryOpAssociativity = map[tokens.TokenType]associativity{
@@ -41,6 +43,8 @@ var BinaryOpAssociativity = map[tokens.TokenType]associativity{
 	tokens.CONCAT: AssocLeft,
 
 	// operating on booleans
+	tokens.OR:  AssocLeft,
+	tokens.AND: AssocLeft,
 
 	// general purpose
 	tokens.EQ:  AssocLeft,
@@ -67,7 +71,9 @@ func isBinaryOp(tk *tokens.Token) bool {
 		tokens.POW,
 		tokens.EQ,
 		tokens.NEQ,
-		tokens.CONCAT:
+		tokens.CONCAT,
+		tokens.AND,
+		tokens.OR:
 		return true
 	default:
 		return false

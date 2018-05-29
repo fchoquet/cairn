@@ -156,6 +156,24 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position) {
 			t.yieldToken(tokens.NOT, "!", pos)
 			pos.Col++
 		}
+	case head == '|':
+		if len(tail) > 0 && tail[0] == '|' {
+			tail = tail[1:]
+			t.yieldToken(tokens.OR, "||", pos)
+			pos.Col += 2
+		} else {
+			t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error: unexpected | in %s", text), pos)
+			return
+		}
+	case head == '&':
+		if len(tail) > 0 && tail[0] == '&' {
+			tail = tail[1:]
+			t.yieldToken(tokens.AND, "&&", pos)
+			pos.Col += 2
+		} else {
+			t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error: unexpected & in %s", text), pos)
+			return
+		}
 	default:
 		t.yieldToken(tokens.ERROR, fmt.Sprintf("syntax error in %s", text), pos)
 		// stop recursion
@@ -206,4 +224,14 @@ func isDigit(char byte) bool {
 
 func isAlpha(char byte) bool {
 	return (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z') || char == '_'
+}
+
+// Flush all remaining tokens
+func (t *Tokenizer) Flush() ([]*tokens.Token, error) {
+	tks := []*tokens.Token{}
+	tk, err := t.NextToken()
+	for ; err == nil && tk != nil && tk.Type != tokens.EOF; tk, err = t.NextToken() {
+		tks = append(tks, tk)
+	}
+	return tks, err
 }

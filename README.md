@@ -43,9 +43,14 @@ false
 !true != !false
 true
 
-# TODO: Fix this case
 (true == false) != false
 false
+
+true && true
+true
+
+true || !false
+true
 
 ```
 

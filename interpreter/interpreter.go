@@ -42,13 +42,21 @@ func (i *Interpreter) Interpret(fileName, text string) (string, error) {
 	// END DEBUG CODE
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("Parser error: %s", err)
 	}
 
 	return i.visit(ast)
 }
 
 func (i *Interpreter) visit(node ast.Node) (string, error) {
+	if s, ok := node.(*ast.SourceFile); ok {
+		return i.visitSourceFile(s)
+	}
+
+	if f, ok := node.(*ast.FuncDecl); ok {
+		return i.visitFuncDecl(f)
+	}
+
 	if sl, ok := node.(*ast.StatementList); ok {
 		return i.visitStatementList(sl)
 	}
@@ -86,6 +94,20 @@ func (i *Interpreter) visit(node ast.Node) (string, error) {
 	}
 
 	return "", fmt.Errorf("unexpected node type: %v", node)
+}
+
+func (i *Interpreter) visitSourceFile(node *ast.SourceFile) (string, error) {
+	for _, f := range node.Functions {
+		if _, err := i.visit(f); err != nil {
+			return "", err
+		}
+	}
+	return i.visitStatementList(node.Statements)
+}
+
+func (i *Interpreter) visitFuncDecl(node *ast.FuncDecl) (string, error) {
+	// TODO implement
+	return "", nil
 }
 
 func (i *Interpreter) visitStatementList(node *ast.StatementList) (string, error) {

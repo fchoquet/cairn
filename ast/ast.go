@@ -11,6 +11,19 @@ type Node interface {
 	fmt.Stringer
 }
 
+type SourceFile struct {
+	Functions  []*FuncDecl
+	Statements *StatementList
+}
+
+func (s SourceFile) String() string {
+	functions := []string{}
+	for _, f := range s.Functions {
+		functions = append(functions, f.String())
+	}
+	return fmt.Sprintf("SourceFile(%s %s)", strings.Join(functions, "; "), s.Statements)
+}
+
 type Statement interface {
 	Node
 }
@@ -102,4 +115,57 @@ type Variable struct {
 
 func (v *Variable) String() string {
 	return fmt.Sprintf("Variable(%s)", v.Name)
+}
+
+type TypeId struct {
+	Token *tokens.Token
+	Name  string
+}
+
+func (t *TypeId) String() string {
+	return fmt.Sprintf("Type(%s)", t.Name)
+}
+
+type Parameter struct {
+	Token *tokens.Token
+	Name  string
+	Type  *TypeId
+}
+
+func (p *Parameter) String() string {
+	return fmt.Sprintf("Parameter(%s %s)", p.Name, p.Type)
+}
+
+type ParameterList struct {
+	Token      *tokens.Token
+	Parameters []*Parameter
+}
+
+func (pl ParameterList) String() string {
+	params := []string{}
+	for _, p := range pl.Parameters {
+		params = append(params, p.String())
+	}
+	return fmt.Sprintf("ParameterList(%s)", strings.Join(params, " "))
+}
+
+type FuncDecl struct {
+	Token     *tokens.Token
+	Name      *tokens.Token
+	Signature *Signature
+	Body      *BlockStmt
+}
+
+func (f *FuncDecl) String() string {
+	return fmt.Sprintf("FuncDecl(%s %s %s)", f.Name, f.Signature, f.Body)
+}
+
+type Signature struct {
+	Token      *tokens.Token
+	Parameters *ParameterList
+	ReturnType *TypeId
+}
+
+func (s *Signature) String() string {
+	return fmt.Sprintf("Signature(%s %s)", s.Parameters, s.ReturnType)
 }

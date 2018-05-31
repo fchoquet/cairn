@@ -7,6 +7,11 @@ For instance `1 + (a := 2)` is not allowed even if `a := 2` is an expression tha
 I use the word `statement` for these types of expressions that can't be combined with other expressions
 
 ```
+sourceFile
+    : ( functionDecl )*
+    | statementList
+    ;
+
 statementList
     : (statement)*
     ;
@@ -80,7 +85,7 @@ signature
     ;
 
 result
-    : type
+    : typeId
     ;
 
 parameters
@@ -92,10 +97,10 @@ parameterList
     ;
 
 parameterDecl
-    : IDENTIFIER type
+    : IDENTIFIER typeId
     ;
 
-type
+typeId
     : typeName
     | typeLit // not implemented yet
     ;

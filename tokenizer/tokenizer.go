@@ -107,10 +107,15 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position, indent int) {
 		switch value {
 		case "true", "false":
 			t.yieldToken(tokens.BOOL, value, pos)
+		case "func":
+			t.yieldToken(tokens.FUNC, value, pos)
 		default:
 			t.yieldToken(tokens.IDENTIFIER, value, pos)
 		}
 		pos.Col += len(value)
+	case head == ',':
+		t.yieldToken(tokens.COMMA, "COMMA", pos)
+		pos.Col++
 	case head == '+':
 		if len(tail) > 0 && tail[0] == '+' {
 			tail = text[2:]
@@ -151,15 +156,14 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position, indent int) {
 		t.yieldToken(tokens.STRING, value, pos)
 		pos.Col += length
 	case head == ':':
-		// might be an assignment
-		if len(tail) == 0 || tail[0] != '=' {
-			t.yieldToken(tokens.ERROR, "Unexpected :", pos)
-			return
+		if len(tail) > 0 && tail[0] == '=' {
+			tail = tail[1:]
+			t.yieldToken(tokens.ASSIGN, ":=", pos)
+			pos.Col += 2
+		} else {
+			t.yieldToken(tokens.COLUMN, "COLUMN", pos)
+			pos.Col++
 		}
-
-		tail = tail[1:]
-		t.yieldToken(tokens.ASSIGN, ":=", pos)
-		pos.Col += 2
 	case head == '=':
 		// might be an equality comparison
 		if len(tail) == 0 || tail[0] != '=' {

@@ -229,6 +229,35 @@ func TestIndentation(t *testing.T) {
 	})
 }
 
+func TestFunctions(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("function declaration", func(t *testing.T) {
+		fixtures := []struct {
+			input    string
+			expected string
+		}{
+			{`func foo() :int`, `func:FUNC,foo:IDENTIFIER,LPAREN:LPAREN,RPAREN:RPAREN,COLUMN:COLUMN,int:IDENTIFIER`},
+			{`func foo(bar:string, baz:int) :bool`, `func:FUNC,foo:IDENTIFIER,LPAREN:LPAREN,bar:IDENTIFIER,COLUMN:COLUMN,string:IDENTIFIER,COMMA:COMMA,baz:IDENTIFIER,COLUMN:COLUMN,int:IDENTIFIER,RPAREN:RPAREN,COLUMN:COLUMN,bool:IDENTIFIER`},
+		}
+
+		for _, f := range fixtures {
+			tks, err := Tokenize("test.ca", f.input).Flush()
+			if !assert.Nil(err) {
+				continue
+			}
+
+			stringTks := []string{}
+			for _, tk := range tks {
+				stringTks = append(stringTks, tk.String())
+			}
+
+			assert.Equal(f.expected, strings.Join(stringTks, ","))
+		}
+
+	})
+}
+
 func TestBuffer(t *testing.T) {
 	assert := assert.New(t)
 	t.Run("reads tokens until the end of input", func(t *testing.T) {

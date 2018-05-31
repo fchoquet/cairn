@@ -17,7 +17,7 @@ type Parser struct {
 func (p *Parser) Parse(fileName, text string) (ast.Node, error) {
 	p.buffer = NewTokenBuffer(tokenizer.Tokenize(fileName, text), 2)
 
-	return p.statementList()
+	return p.sourceFile()
 }
 
 func (p *Parser) current() *tokens.Token {
@@ -39,6 +39,27 @@ func (p *Parser) consume(tkType tokens.TokenType) (*tokens.Token, error) {
 	// let's use mutation for now
 	p.buffer = newBuffer
 	return tk, err
+}
+
+func (p *Parser) sourceFile() (*ast.SourceFile, error) {
+	functions := []*ast.FuncDecl{}
+	for tk := p.current(); looksLikeFunctionDecl(tk); tk = p.current() {
+		f, err := p.functionDecl()
+		if err != nil {
+			return nil, err
+		}
+		functions = append(functions, f)
+	}
+
+	statements, err := p.statementList()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.SourceFile{
+		Functions:  functions,
+		Statements: statements,
+	}, nil
 }
 
 func (p *Parser) statementList() (*ast.StatementList, error) {
@@ -70,7 +91,7 @@ func (p *Parser) statement() (ast.Node, error) {
 	}
 }
 
-func (p *Parser) block() (ast.Node, error) {
+func (p *Parser) block() (*ast.BlockStmt, error) {
 	begin, err := p.consume(tokens.BEGIN)
 	if err != nil {
 		return nil, err
@@ -263,4 +284,21 @@ func (p *Parser) basicLit() (ast.Node, error) {
 	default:
 		return nil, fmt.Errorf("unexpected basic litteral: %s:%s", tk.Value, tk.Type)
 	}
+}
+
+func (p *Parser) typeId() (*ast.TypeId, error) {
+	tk, err := p.consume(tokens.COLUMN)
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := p.consume(tokens.IDENTIFIER)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.TypeId{
+		Token: tk,
+		Name:  name.Value,
+	}, nil
 }

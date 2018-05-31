@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -114,7 +115,7 @@ func TestParser(t *testing.T) {
 			if !assert.Nil(err, f.source) {
 				break
 			}
-			assert.Equal(f.ast, node.String())
+			assert.Equal(fmt.Sprintf("SourceFile( StatementList(%s))", f.ast), node.String())
 		}
 	})
 }

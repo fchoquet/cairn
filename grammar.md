@@ -7,22 +7,22 @@ For instance `1 + (a := 2)` is not allowed even if `a := 2` is an expression tha
 I use the word `statement` for these types of expressions that can't be combined with other expressions
 
 ```
-eos
-    : EOF
-    | EOL
-    ;
-
 statementList
-    : ( statement eos )*
+    : (statement)*
     ;
 
 statement
-    : simpleStmt
+    : block
+    | simpleStmt
 	;
 
 simpleStmt
     : expression
     | assignment
+    ;
+
+block
+    : BEGIN statementList END
     ;
 
 expression
@@ -63,9 +63,6 @@ basicLit
 assignment
     : IDENTIFIER ASSIGN expression
     ;    
-
-block
-    : BEGIN statementList END
 
 //////////////
 // functions

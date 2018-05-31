@@ -17,7 +17,7 @@ type Parser struct {
 func (p *Parser) Parse(fileName, text string) (ast.Node, error) {
 	p.buffer = NewTokenBuffer(tokenizer.Tokenize(fileName, text), 2)
 
-	return p.simpleStmt()
+	return p.statementList()
 }
 
 func (p *Parser) current() *tokens.Token {
@@ -39,6 +39,58 @@ func (p *Parser) consume(tkType tokens.TokenType) (*tokens.Token, error) {
 	// let's use mutation for now
 	p.buffer = newBuffer
 	return tk, err
+}
+
+func (p *Parser) statementList() (*ast.StatementList, error) {
+	statements := []ast.Statement{}
+
+	for tk := p.current(); tk != nil && tk.Type != tokens.EOF && tk.Type != tokens.END; tk = p.current() {
+		// skip end of lines
+		if tk.Type == tokens.EOL {
+			if _, err := p.consume(tokens.EOL); err != nil {
+				return nil, err
+			}
+			continue
+		}
+		st, err := p.statement()
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, st)
+	}
+	return &ast.StatementList{Statements: statements}, nil
+}
+
+func (p *Parser) statement() (ast.Node, error) {
+	switch p.current().Type {
+	case tokens.BEGIN:
+		return p.block()
+	default:
+		return p.simpleStmt()
+	}
+}
+
+func (p *Parser) block() (ast.Node, error) {
+	begin, err := p.consume(tokens.BEGIN)
+	if err != nil {
+		return nil, err
+	}
+
+	sl, err := p.statementList()
+	if err != nil {
+		return nil, err
+	}
+
+	end, err := p.consume(tokens.END)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.BlockStmt{
+		Begin:      begin,
+		Statements: sl,
+		End:        end,
+	}, nil
 }
 
 func (p *Parser) simpleStmt() (ast.Node, error) {

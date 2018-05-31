@@ -49,6 +49,13 @@ func (i *Interpreter) Interpret(fileName, text string) (string, error) {
 }
 
 func (i *Interpreter) visit(node ast.Node) (string, error) {
+	if sl, ok := node.(*ast.StatementList); ok {
+		return i.visitStatementList(sl)
+	}
+
+	if block, ok := node.(*ast.BlockStmt); ok {
+		return i.visitBlockStmt(block)
+	}
 
 	if num, ok := node.(*ast.Num); ok {
 		return i.visitNum(num)
@@ -79,6 +86,24 @@ func (i *Interpreter) visit(node ast.Node) (string, error) {
 	}
 
 	return "", fmt.Errorf("unexpected node type: %v", node)
+}
+
+func (i *Interpreter) visitStatementList(node *ast.StatementList) (string, error) {
+	output := ""
+	for _, st := range node.Statements {
+		s, err := i.visit(st)
+		if err != nil {
+			return output, err
+		}
+		// the output is the output of the last statement
+		output = s
+	}
+
+	return output, nil
+}
+
+func (i *Interpreter) visitBlockStmt(node *ast.BlockStmt) (string, error) {
+	return i.visitStatementList(node.Statements)
 }
 
 func (i *Interpreter) visitNum(node *ast.Num) (string, error) {

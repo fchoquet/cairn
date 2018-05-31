@@ -74,13 +74,18 @@ func (t *Tokenizer) tokenize(text string, pos tokens.Position, indent int) {
 		oldIndent := indent
 		var consumed int
 		indent, consumed = consumeTab(tail)
+		diff := indent - oldIndent
 		switch {
-		case indent > oldIndent:
+		case diff > 0:
 			// indentation increased => begin block
-			t.yieldToken(tokens.BEGIN, "BEGIN"+strconv.Itoa(indent), pos)
-		case indent < oldIndent:
+			for i := 0; i < diff; i++ {
+				t.yieldToken(tokens.BEGIN, "BEGIN"+strconv.Itoa(oldIndent+1+i), pos)
+			}
+		case diff < 0:
 			// indentation decreased => end block
-			t.yieldToken(tokens.END, "END"+strconv.Itoa(oldIndent), pos)
+			for i := 0; i < -diff; i++ {
+				t.yieldToken(tokens.END, "END"+strconv.Itoa(oldIndent-i), pos)
+			}
 		default:
 			// no indentation change. Simply yields an EOL
 			t.yieldToken(tokens.EOL, "EOL", pos)

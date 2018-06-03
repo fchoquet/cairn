@@ -8,25 +8,35 @@ type TokenType string
 // Token types
 const (
 	ERROR      TokenType = "ERROR"
-	INTEGER    TokenType = "INTEGER"
-	STRING     TokenType = "STRING"
-	BOOL       TokenType = "BOOL"
-	PLUS       TokenType = "PLUS"
-	MINUS      TokenType = "MINUS"
-	MULT       TokenType = "MULT"
-	DIV        TokenType = "DIV"
-	POW        TokenType = "POW"
-	CONCAT     TokenType = "CONCAT"
 	EOF        TokenType = "EOF"
+	EOL        TokenType = "EOL"
+	BEGIN      TokenType = "BEGIN"
+	END        TokenType = "END"
 	LPAREN     TokenType = "LPAREN"
 	RPAREN     TokenType = "RPAREN"
 	ASSIGN     TokenType = "ASSIGN"
 	IDENTIFIER TokenType = "IDENTIFIER"
-	NOT        TokenType = "NOT"
-	AND        TokenType = "AND"
-	OR         TokenType = "OR"
-	EQ         TokenType = "EQ"
-	NEQ        TokenType = "NEQ"
+	FUNC       TokenType = "FUNC"
+	COLUMN     TokenType = "COLUMN"
+	COMMA      TokenType = "COMMA"
+
+	// primaty type litterals
+	INTEGER TokenType = "INTEGER"
+	STRING  TokenType = "STRING"
+	BOOL    TokenType = "BOOL"
+
+	// operators
+	PLUS   TokenType = "PLUS"
+	MINUS  TokenType = "MINUS"
+	MULT   TokenType = "MULT"
+	DIV    TokenType = "DIV"
+	POW    TokenType = "POW"
+	CONCAT TokenType = "CONCAT"
+	NOT    TokenType = "NOT"
+	AND    TokenType = "AND"
+	OR     TokenType = "OR"
+	EQ     TokenType = "EQ"
+	NEQ    TokenType = "NEQ"
 )
 
 // Token reprensents the result of a lexical analysis

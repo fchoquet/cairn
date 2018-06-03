@@ -67,3 +67,10 @@ bar := " world"
 foo ++ bar
 > hello world
 ```
+
+## functions
+
+```
+func add(a:int, b:int) :int
+    a + b
+```

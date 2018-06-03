@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -111,10 +112,10 @@ func TestParser(t *testing.T) {
 		for _, f := range fixtures {
 			parser := Parser{}
 			node, err := parser.Parse("test.ca", f.source)
-			if !assert.Nil(err) {
+			if !assert.Nil(err, f.source) {
 				break
 			}
-			assert.Equal(f.ast, node.String())
+			assert.Equal(fmt.Sprintf("SourceFile( StatementList(%s))", f.ast), node.String())
 		}
 	})
 }

@@ -49,51 +49,32 @@ func (i *Interpreter) Interpret(fileName, text string) (string, error) {
 }
 
 func (i *Interpreter) visit(node ast.Node) (string, error) {
-	if s, ok := node.(*ast.SourceFile); ok {
-		return i.visitSourceFile(s)
+	switch n := node.(type) {
+	case *ast.SourceFile:
+		return i.visitSourceFile(n)
+	case *ast.FuncDecl:
+		return i.visitFuncDecl(n)
+	case *ast.StatementList:
+		return i.visitStatementList(n)
+	case *ast.BlockStmt:
+		return i.visitBlockStmt(n)
+	case *ast.Num:
+		return i.visitNum(n)
+	case *ast.String:
+		return i.visitString(n)
+	case *ast.Bool:
+		return i.visitBool(n)
+	case *ast.UnaryOp:
+		return i.visitUnaryOp(n)
+	case *ast.BinOp:
+		return i.visitBinOp(n)
+	case *ast.Assignment:
+		return i.visitAssignment(n)
+	case *ast.Variable:
+		return i.visitVariable(n)
+	default:
+		return "", fmt.Errorf("unexpected node type: %v", node)
 	}
-
-	if f, ok := node.(*ast.FuncDecl); ok {
-		return i.visitFuncDecl(f)
-	}
-
-	if sl, ok := node.(*ast.StatementList); ok {
-		return i.visitStatementList(sl)
-	}
-
-	if block, ok := node.(*ast.BlockStmt); ok {
-		return i.visitBlockStmt(block)
-	}
-
-	if num, ok := node.(*ast.Num); ok {
-		return i.visitNum(num)
-	}
-
-	if str, ok := node.(*ast.String); ok {
-		return i.visitString(str)
-	}
-
-	if b, ok := node.(*ast.Bool); ok {
-		return i.visitBool(b)
-	}
-
-	if unaryOp, ok := node.(*ast.UnaryOp); ok {
-		return i.visitUnaryOp(unaryOp)
-	}
-
-	if binOp, ok := node.(*ast.BinOp); ok {
-		return i.visitBinOp(binOp)
-	}
-
-	if str, ok := node.(*ast.Assignment); ok {
-		return i.visitAssignment(str)
-	}
-
-	if str, ok := node.(*ast.Variable); ok {
-		return i.visitVariable(str)
-	}
-
-	return "", fmt.Errorf("unexpected node type: %v", node)
 }
 
 func (i *Interpreter) visitSourceFile(node *ast.SourceFile) (string, error) {
